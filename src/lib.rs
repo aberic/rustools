@@ -16,6 +16,8 @@
 extern crate lazy_static;
 extern crate phf;
 
+pub use channel::Channel;
+pub use compress::Compress;
 pub use env::Env;
 pub use rands::Rand;
 pub use time::Time;
@@ -35,3 +37,6 @@ mod time;
 mod trans;
 pub mod vectors;
 pub mod yaml;
+mod channel;
+mod compress;
+pub mod log;
