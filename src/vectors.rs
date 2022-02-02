@@ -55,6 +55,8 @@ pub trait VectorHandler {
     fn find_eq_vec_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<Vec<u8>>>;
     /// 创建长度为len且字节均为0x00的字节数组
     fn create_empty_bytes(len: usize) -> Vec<u8>;
+    /// 创建长度为len且内容为空的数组
+    fn create_empty<T>(len: usize) -> Vec<T>;
     /// 检查字节数组是否被填充，即数组中任意字节不为`0x00`
     fn is_fill(bytes: Vec<u8>) -> bool;
     /// 检查字节数组是否为空或都不为`0x00`
@@ -97,6 +99,9 @@ impl VectorHandler for Vector {
     }
     fn create_empty_bytes(len: usize) -> Vec<u8> {
         create_empty_bytes(len)
+    }
+    fn create_empty<T>(len: usize) -> Vec<T> {
+        Vec::with_capacity(len)
     }
 
     fn is_fill(bytes: Vec<u8>) -> bool {
@@ -247,7 +252,7 @@ fn vector_find_eq_vec_bytes(mut bytes: Vec<u8>, eq: usize) -> Results<Vec<Vec<u8
 
 /// 创建长度为len且字节均为0x00的字节数组
 fn create_empty_bytes(len: usize) -> Vec<u8> {
-    let mut res: Vec<u8> = vec![];
+    let mut res: Vec<u8> = Vec::with_capacity(len);
     let mut position = 0;
     while position < len {
         res.push(0x00);
