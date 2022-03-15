@@ -1,6 +1,6 @@
 [package]
 name = "rustools"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["aberic <100309595@qq.com>"]
 license = "Apache-2.0"
 description = "Common tool library"
@@ -27,14 +27,14 @@ crc32fast = "1"
 crc64fast = "1"
 hex = "0"
 libsm = { git = "https://github.com/citahub/libsm", version = "0" }
-rand = "0"
+rand = "0.8"
 num-bigint = "0.4"
 tokio = { version = "1", features = ["full"] }
 tonic = "0"
 futures-util = { version = "0", default-features = false }
 async-stream = "0"
-Cupcake = "0" # homomorphic
-concrete = "^0.1" # homomorphic
+# Cupcake = "0" # homomorphic
+# concrete = { version = "0.1.11", features = ["stdsimd"] } # homomorphic
 crossbeam = "0"
 num_cpus = "1"
 flate2 = "1"
