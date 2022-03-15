@@ -215,7 +215,7 @@ impl<S> SslStream<S> {
     }
 
     /// Returns a pinned mutable reference to the underlying stream.
-    pub fn get_pin_mut(self: Pin<&mut Self>) -> Pin<&mut S> {
+    pub fn obtain_pin_mut(self: Pin<&mut Self>) -> Pin<&mut S> {
         unsafe { Pin::new_unchecked(&mut self.get_unchecked_mut().0.get_mut().stream) }
     }
 
@@ -287,6 +287,6 @@ where
             }
         }
 
-        self.get_pin_mut().poll_shutdown(ctx)
+        self.obtain_pin_mut().poll_shutdown(ctx)
     }
 }

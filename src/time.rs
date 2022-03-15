@@ -74,7 +74,7 @@ impl Time {
     /// # 例子
     ///
     /// ~~~~
-    /// use starry::utils::Time;
+    /// use rustools::Time;
     ///
     /// let time = Time::parse_from_str("2021-12-08 10:37:54", "%Y-%m-%d %H:%M:%S").unwrap();
     /// assert_eq!("2021-12-08 10:37:54", time.format_string("%Y-%m-%d %H:%M:%S"));
