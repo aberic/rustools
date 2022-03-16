@@ -15,7 +15,7 @@
 use std::sync::{Arc, RwLock, RwLockWriteGuard};
 
 use crate::cryptos::hash::Hash;
-use crate::cryptos::hash::HashMD5Handler;
+use crate::cryptos::hash::HashHandler;
 use crate::errors::{Errs, Results};
 use crate::merkle::child::NodeChild;
 

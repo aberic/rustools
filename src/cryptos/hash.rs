@@ -14,280 +14,378 @@
 
 use std::ops::Add;
 
+use crc::{Crc, CRC_16_IBM_SDLC, CRC_32_ISCSI, CRC_64_ECMA_182, CRC_8_BLUETOOTH};
 use openssl::hash::{Hasher, MessageDigest};
 
-use crate::cryptos::hex::HexEncoder;
 use crate::cryptos::Hex;
+use crate::cryptos::hex::HexEncoder;
 use crate::errors::{Errs, Results};
-use crate::strings::StringHandler;
 use crate::strings::Strings;
 
 #[derive(Debug, Clone)]
 pub struct Hash;
 
-pub trait HashMD5Handler<T> {
-    fn digest(md: MessageDigest, comment: T) -> Results<String>;
+pub trait HashHandler<T> {
+    fn digest(md: MessageDigest, content: T) -> Results<String>;
 
-    fn md5(comment: T) -> String;
+    fn md5(content: T) -> String;
 
-    fn md516(comment: T) -> String;
+    fn md516(content: T) -> String;
 
-    fn sm3(comment: T) -> String;
+    fn sm3(content: T) -> String;
 
-    fn sha1(comment: T) -> String;
+    fn sha1(content: T) -> String;
 
-    fn sha256(comment: T) -> String;
+    fn sha256(content: T) -> String;
+
+    fn crc8(content: T) -> u8;
+
+    fn crc16(content: T) -> u16;
+
+    fn crc32(content: T) -> u32;
+
+    fn crc64(content: T) -> u64;
 }
 
-pub trait HashCRCHandler<T> {
-    fn crc32(comment: T) -> u32;
-
-    fn crc64(comment: T) -> u64;
-}
-
-pub trait HashCRCTypeHandler {
-    fn crc32_string(comment: String) -> Results<u32>;
-
-    fn crc32_bool(comment: String) -> Results<u32>;
-
-    fn crc32_u32(comment: String) -> Results<u32>;
-
-    fn crc32_f32(comment: String) -> Results<u32>;
-
-    fn crc32_i32(comment: String) -> Results<u32>;
-
-    fn crc64_string(comment: String) -> Results<u64>;
-
-    fn crc64_bool(comment: String) -> Results<u64>;
-
-    fn crc64_u32(comment: String) -> Results<u64>;
-
-    fn crc64_u64(comment: String) -> Results<u64>;
-
-    fn crc64_f32(comment: String) -> Results<u64>;
-
-    fn crc64_f64(comment: String) -> Results<u64>;
-
-    fn crc64_i32(comment: String) -> Results<u64>;
-
-    fn crc64_i64(comment: String) -> Results<u64>;
-}
-
-impl HashMD5Handler<&[u8]> for Hash {
-    fn digest(md: MessageDigest, comment: &[u8]) -> Results<String> {
-        digest(md, comment)
+impl HashHandler<&[u8]> for Hash {
+    fn digest(md: MessageDigest, bytes: &[u8]) -> Results<String> {
+        digest(md, bytes)
     }
 
-    fn md5(comment: &[u8]) -> String {
-        md5_u8s(comment)
+    fn md5(bytes: &[u8]) -> String {
+        md5(bytes)
     }
 
-    fn md516(comment: &[u8]) -> String {
-        md516_u8s(comment)
+    fn md516(bytes: &[u8]) -> String {
+        md516(bytes)
     }
 
-    fn sm3(comment: &[u8]) -> String {
-        digest(MessageDigest::sm3(), comment).unwrap()
+    fn sm3(bytes: &[u8]) -> String {
+        digest(MessageDigest::sm3(), bytes).unwrap()
     }
 
-    fn sha1(comment: &[u8]) -> String {
-        digest(MessageDigest::sha1(), comment).unwrap()
+    fn sha1(bytes: &[u8]) -> String {
+        digest(MessageDigest::sha1(), bytes).unwrap()
     }
 
-    fn sha256(comment: &[u8]) -> String {
-        digest(MessageDigest::sha256(), comment).unwrap()
+    fn sha256(bytes: &[u8]) -> String {
+        digest(MessageDigest::sha256(), bytes).unwrap()
+    }
+
+    fn crc8(bytes: &[u8]) -> u8 {
+        crc8(bytes)
+    }
+
+    fn crc16(bytes: &[u8]) -> u16 {
+        crc16(bytes)
+    }
+
+    fn crc32(bytes: &[u8]) -> u32 {
+        crc32(bytes)
+    }
+
+    fn crc64(bytes: &[u8]) -> u64 {
+        crc64(bytes)
     }
 }
 
-impl HashMD5Handler<Vec<u8>> for Hash {
-    fn digest(md: MessageDigest, comment: Vec<u8>) -> Results<String> {
-        digest(md, comment.as_slice())
+impl HashHandler<Vec<u8>> for Hash {
+    fn digest(md: MessageDigest, bytes: Vec<u8>) -> Results<String> {
+        digest(md, bytes.as_slice())
     }
 
-    fn md5(comment: Vec<u8>) -> String {
-        md5_u8s(comment.as_slice())
+    fn md5(bytes: Vec<u8>) -> String {
+        md5(bytes.as_slice())
     }
 
-    fn md516(comment: Vec<u8>) -> String {
-        md516_u8s(comment.as_slice())
+    fn md516(bytes: Vec<u8>) -> String {
+        md516(bytes.as_slice())
     }
 
-    fn sm3(comment: Vec<u8>) -> String {
-        digest(MessageDigest::sm3(), comment.as_slice()).unwrap()
+    fn sm3(bytes: Vec<u8>) -> String {
+        digest(MessageDigest::sm3(), bytes.as_slice()).unwrap()
     }
 
-    fn sha1(comment: Vec<u8>) -> String {
-        digest(MessageDigest::sha1(), comment.as_slice()).unwrap()
+    fn sha1(bytes: Vec<u8>) -> String {
+        digest(MessageDigest::sha1(), bytes.as_slice()).unwrap()
     }
 
-    fn sha256(comment: Vec<u8>) -> String {
-        digest(MessageDigest::sha256(), comment.as_slice()).unwrap()
-    }
-}
-
-impl HashMD5Handler<String> for Hash {
-    fn digest(md: MessageDigest, comment: String) -> Results<String> {
-        digest(md, comment.as_bytes())
+    fn sha256(bytes: Vec<u8>) -> String {
+        digest(MessageDigest::sha256(), bytes.as_slice()).unwrap()
     }
 
-    fn md5(comment: String) -> String {
-        md5(comment)
+    fn crc8(bytes: Vec<u8>) -> u8 {
+        crc8(bytes.as_slice())
     }
 
-    fn md516(comment: String) -> String {
-        md516(comment)
+    fn crc16(bytes: Vec<u8>) -> u16 {
+        crc16(bytes.as_slice())
     }
 
-    fn sm3(comment: String) -> String {
-        digest(MessageDigest::sm3(), comment.as_bytes()).unwrap()
+    fn crc32(bytes: Vec<u8>) -> u32 {
+        crc32(bytes.as_slice())
     }
 
-    fn sha1(comment: String) -> String {
-        digest(MessageDigest::sha1(), comment.as_bytes()).unwrap()
-    }
-
-    fn sha256(comment: String) -> String {
-        digest(MessageDigest::sha256(), comment.as_bytes()).unwrap()
+    fn crc64(bytes: Vec<u8>) -> u64 {
+        crc64(bytes.as_slice())
     }
 }
 
-impl HashCRCHandler<&[u8]> for Hash {
-    fn crc32(comment: &[u8]) -> u32 {
-        hashcode32(comment)
+impl HashHandler<String> for Hash {
+    fn digest(md: MessageDigest, content: String) -> Results<String> {
+        digest(md, content.as_bytes())
     }
 
-    fn crc64(comment: &[u8]) -> u64 {
-        hashcode64(comment)
-    }
-}
-
-impl HashCRCHandler<Vec<u8>> for Hash {
-    fn crc32(comment: Vec<u8>) -> u32 {
-        hashcode32(comment.as_slice())
+    fn md5(content: String) -> String {
+        md5(content.as_bytes())
     }
 
-    fn crc64(comment: Vec<u8>) -> u64 {
-        hashcode64(comment.as_slice())
-    }
-}
-
-impl HashCRCHandler<String> for Hash {
-    fn crc32(comment: String) -> u32 {
-        hashcode32_string(comment)
+    fn md516(content: String) -> String {
+        md516(content.as_bytes())
     }
 
-    fn crc64(comment: String) -> u64 {
-        hashcode64_string(comment)
-    }
-}
-
-impl HashCRCHandler<bool> for Hash {
-    fn crc32(comment: bool) -> u32 {
-        hashcode32_bool_real(comment)
+    fn sm3(content: String) -> String {
+        digest(MessageDigest::sm3(), content.as_bytes()).unwrap()
     }
 
-    fn crc64(comment: bool) -> u64 {
-        hashcode64_bool_real(comment)
-    }
-}
-
-impl HashCRCHandler<i32> for Hash {
-    fn crc32(comment: i32) -> u32 {
-        hashcode32_i32_real(comment)
+    fn sha1(content: String) -> String {
+        digest(MessageDigest::sha1(), content.as_bytes()).unwrap()
     }
 
-    fn crc64(comment: i32) -> u64 {
-        hashcode64_i64_real(comment as i64)
+    fn sha256(content: String) -> String {
+        digest(MessageDigest::sha256(), content.as_bytes()).unwrap()
+    }
+
+    fn crc8(content: String) -> u8 {
+        crc8(content.as_bytes())
+    }
+
+    fn crc16(content: String) -> u16 {
+        crc16(content.as_bytes())
+    }
+
+    fn crc32(content: String) -> u32 {
+        crc32(content.as_bytes())
+    }
+
+    fn crc64(content: String) -> u64 {
+        crc64(content.as_bytes())
     }
 }
 
-impl HashCRCHandler<i64> for Hash {
-    fn crc32(_comment: i64) -> u32 {
-        0
+impl HashHandler<&str> for Hash {
+    fn digest(md: MessageDigest, content: &str) -> Results<String> {
+        digest(md, content.as_bytes())
     }
 
-    fn crc64(comment: i64) -> u64 {
-        hashcode64_i64_real(comment)
-    }
-}
-
-impl HashCRCHandler<f32> for Hash {
-    fn crc32(comment: f32) -> u32 {
-        hashcode32_f32_real(comment)
+    fn md5(content: &str) -> String {
+        md5(content.as_bytes())
     }
 
-    fn crc64(comment: f32) -> u64 {
-        hashcode64_f64_real(comment as f64)
-    }
-}
-
-impl HashCRCHandler<f64> for Hash {
-    fn crc32(_comment: f64) -> u32 {
-        0
+    fn md516(content: &str) -> String {
+        md516(content.as_bytes())
     }
 
-    fn crc64(comment: f64) -> u64 {
-        hashcode64_f64_real(comment)
-    }
-}
-
-impl HashCRCTypeHandler for Hash {
-    fn crc32_string(comment: String) -> Results<u32> {
-        Ok(hashcode32_string(comment))
+    fn sm3(content: &str) -> String {
+        digest(MessageDigest::sm3(), content.as_bytes()).unwrap()
     }
 
-    fn crc32_bool(comment: String) -> Results<u32> {
-        hashcode32_bl(comment)
+    fn sha1(content: &str) -> String {
+        digest(MessageDigest::sha1(), content.as_bytes()).unwrap()
     }
 
-    fn crc32_u32(comment: String) -> Results<u32> {
-        hashcode32_u32(comment)
+    fn sha256(content: &str) -> String {
+        digest(MessageDigest::sha256(), content.as_bytes()).unwrap()
     }
 
-    fn crc32_f32(comment: String) -> Results<u32> {
-        hashcode32_f32(comment)
+    fn crc8(content: &str) -> u8 {
+        crc8(content.as_bytes())
     }
 
-    fn crc32_i32(comment: String) -> Results<u32> {
-        hashcode32_i32(comment)
+    fn crc16(content: &str) -> u16 {
+        crc16(content.as_bytes())
     }
 
-    fn crc64_string(comment: String) -> Results<u64> {
-        Ok(hashcode64_string(comment))
+    fn crc32(content: &str) -> u32 {
+        crc32(content.as_bytes())
     }
 
-    fn crc64_bool(comment: String) -> Results<u64> {
-        hashcode64_bl(comment)
-    }
-
-    fn crc64_u32(comment: String) -> Results<u64> {
-        hashcode64_u64(comment)
-    }
-
-    fn crc64_u64(comment: String) -> Results<u64> {
-        hashcode64_u64(comment)
-    }
-
-    fn crc64_f32(comment: String) -> Results<u64> {
-        hashcode64_f64(comment)
-    }
-
-    fn crc64_f64(comment: String) -> Results<u64> {
-        hashcode64_f64(comment)
-    }
-
-    fn crc64_i32(comment: String) -> Results<u64> {
-        hashcode64_i64(comment)
-    }
-
-    fn crc64_i64(comment: String) -> Results<u64> {
-        hashcode64_i64(comment)
+    fn crc64(content: &str) -> u64 {
+        crc64(content.as_bytes())
     }
 }
 
-fn digest(md: MessageDigest, comment: &[u8]) -> Results<String> {
+impl HashHandler<i32> for Hash {
+    fn digest(md: MessageDigest, content: i32) -> Results<String> {
+        digest(md, content.to_string().as_bytes())
+    }
+
+    fn md5(content: i32) -> String {
+        md5(content.to_string().as_bytes())
+    }
+
+    fn md516(content: i32) -> String {
+        md516(content.to_string().as_bytes())
+    }
+
+    fn sm3(content: i32) -> String {
+        digest(MessageDigest::sm3(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn sha1(content: i32) -> String {
+        digest(MessageDigest::sha1(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn sha256(content: i32) -> String {
+        digest(MessageDigest::sha256(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn crc8(content: i32) -> u8 {
+        crc8(content.to_string().as_bytes())
+    }
+
+    fn crc16(content: i32) -> u16 {
+        crc16(content.to_string().as_bytes())
+    }
+
+    fn crc32(content: i32) -> u32 {
+        i32_to_crc32(content)
+    }
+
+    fn crc64(content: i32) -> u64 {
+        i64_to_crc64(content as i64)
+    }
+}
+
+impl HashHandler<i64> for Hash {
+    fn digest(md: MessageDigest, content: i64) -> Results<String> {
+        digest(md, content.to_string().as_bytes())
+    }
+
+    fn md5(content: i64) -> String {
+        md5(content.to_string().as_bytes())
+    }
+
+    fn md516(content: i64) -> String {
+        md516(content.to_string().as_bytes())
+    }
+
+    fn sm3(content: i64) -> String {
+        digest(MessageDigest::sm3(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn sha1(content: i64) -> String {
+        digest(MessageDigest::sha1(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn sha256(content: i64) -> String {
+        digest(MessageDigest::sha256(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn crc8(content: i64) -> u8 {
+        crc8(content.to_string().as_bytes())
+    }
+
+    fn crc16(content: i64) -> u16 {
+        crc16(content.to_string().as_bytes())
+    }
+
+    fn crc32(content: i64) -> u32 {
+        crc32(content.to_string().as_bytes())
+    }
+
+    fn crc64(content: i64) -> u64 {
+        i64_to_crc64(content)
+    }
+}
+
+impl HashHandler<f32> for Hash {
+    fn digest(md: MessageDigest, content: f32) -> Results<String> {
+        digest(md, content.to_string().as_bytes())
+    }
+
+    fn md5(content: f32) -> String {
+        md5(content.to_string().as_bytes())
+    }
+
+    fn md516(content: f32) -> String {
+        md516(content.to_string().as_bytes())
+    }
+
+    fn sm3(content: f32) -> String {
+        digest(MessageDigest::sm3(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn sha1(content: f32) -> String {
+        digest(MessageDigest::sha1(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn sha256(content: f32) -> String {
+        digest(MessageDigest::sha256(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn crc8(content: f32) -> u8 {
+        crc8(content.to_string().as_bytes())
+    }
+
+    fn crc16(content: f32) -> u16 {
+        crc16(content.to_string().as_bytes())
+    }
+
+    fn crc32(content: f32) -> u32 {
+        f32_to_crc32(content)
+    }
+
+    fn crc64(content: f32) -> u64 {
+        f32_to_crc64(content)
+    }
+}
+
+impl HashHandler<f64> for Hash {
+    fn digest(md: MessageDigest, content: f64) -> Results<String> {
+        digest(md, content.to_string().as_bytes())
+    }
+
+    fn md5(content: f64) -> String {
+        md5(content.to_string().as_bytes())
+    }
+
+    fn md516(content: f64) -> String {
+        md516(content.to_string().as_bytes())
+    }
+
+    fn sm3(content: f64) -> String {
+        digest(MessageDigest::sm3(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn sha1(content: f64) -> String {
+        digest(MessageDigest::sha1(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn sha256(content: f64) -> String {
+        digest(MessageDigest::sha256(), content.to_string().as_bytes()).unwrap()
+    }
+
+    fn crc8(content: f64) -> u8 {
+        crc8(content.to_string().as_bytes())
+    }
+
+    fn crc16(content: f64) -> u16 {
+        crc16(content.to_string().as_bytes())
+    }
+
+    fn crc32(content: f64) -> u32 {
+        crc32(content.to_string().as_bytes())
+    }
+
+    fn crc64(content: f64) -> u64 {
+        f64_to_crc64(content)
+    }
+}
+
+fn digest(md: MessageDigest, bytes: &[u8]) -> Results<String> {
     match Hasher::new(md) {
-        Ok(mut hasher) => match hasher.update(comment) {
+        Ok(mut hasher) => match hasher.update(bytes) {
             Ok(()) => match hasher.finish() {
                 Ok(d_bytes) => Ok(Hex::encode(d_bytes.to_vec())),
                 Err(err) => Err(Errs::strs("hasher finish", err)),
@@ -298,102 +396,46 @@ fn digest(md: MessageDigest, comment: &[u8]) -> Results<String> {
     }
 }
 
-fn md5(comment: String) -> String {
-    md5_u8s(comment.as_bytes())
-}
-
-fn md5_u8s(comment: &[u8]) -> String {
+fn md5(bytes: &[u8]) -> String {
     let mut hash = Hasher::new(MessageDigest::md5()).unwrap();
-    hash.update(comment).unwrap();
+    hash.update(bytes).unwrap();
     let res = hash.finish().unwrap();
     Hex::encode(res.to_vec())
 }
 
-fn md516(comment: String) -> String {
-    Strings::subs(md5(comment), 8, 24)
+fn md516(bytes: &[u8]) -> String {
+    Strings::sub(md5(bytes), 8, 24)
 }
 
-fn md516_u8s(comment: &[u8]) -> String {
-    Strings::subs(md5_u8s(comment), 8, 24)
+fn crc8(bytes: &[u8]) -> u8 {
+    let crc = Crc::<u8>::new(&CRC_8_BLUETOOTH);
+    let mut digest = crc.digest();
+    digest.update(bytes);
+    digest.finalize()
 }
 
-fn hashcode32(comment: &[u8]) -> u32 {
-    let mut hasher = crc32fast::Hasher::new();
-    hasher.update(comment);
-    hasher.finalize()
+fn crc16(bytes: &[u8]) -> u16 {
+    let crc = Crc::<u16>::new(&CRC_16_IBM_SDLC);
+    let mut digest = crc.digest();
+    digest.update(bytes);
+    digest.finalize()
 }
 
-fn hashcode32_string(comment: String) -> u32 {
-    hashcode32(comment.as_bytes())
+fn crc32(bytes: &[u8]) -> u32 {
+    let crc = Crc::<u32>::new(&CRC_32_ISCSI);
+    let mut digest = crc.digest();
+    digest.update(bytes);
+    digest.finalize()
 }
 
-fn hashcode64(comment: &[u8]) -> u64 {
-    let mut c = crc64fast::Digest::new();
-    c.write(comment);
-    c.sum64()
+fn crc64(bytes: &[u8]) -> u64 {
+    let crc = Crc::<u64>::new(&CRC_64_ECMA_182);
+    let mut digest = crc.digest();
+    digest.update(bytes);
+    digest.finalize()
 }
 
-fn hashcode64_string(comment: String) -> u64 {
-    hashcode64(comment.as_bytes())
-}
-
-fn hashcode32_u32(comment: String) -> Results<u32> {
-    match comment.parse::<u32>() {
-        Ok(real) => Ok(real),
-        Err(err) => Err(Errs::strings(format!("{} parse to u32", comment), err)),
-    }
-}
-
-fn hashcode64_u64(comment: String) -> Results<u64> {
-    match comment.parse::<u64>() {
-        Ok(real) => Ok(real),
-        Err(err) => Err(Errs::strings(format!("{} parse to u64", comment), err)),
-    }
-}
-
-fn hashcode32_i32(comment: String) -> Results<u32> {
-    match comment.parse::<i32>() {
-        Ok(real) => Ok(hashcode32_i32_real(real)),
-        Err(err) => Err(Errs::strings(format!("{} parse to i32", comment), err)),
-    }
-}
-
-fn hashcode64_i64(comment: String) -> Results<u64> {
-    match comment.parse::<i64>() {
-        Ok(real) => Ok(hashcode64_i64_real(real)),
-        Err(err) => Err(Errs::strings(format!("{} parse to i64", comment), err)),
-    }
-}
-
-fn hashcode32_f32(comment: String) -> Results<u32> {
-    match comment.parse::<f32>() {
-        Ok(real) => Ok(hashcode32_f32_real(real)),
-        Err(err) => Err(Errs::strings(format!("{} parse to f32", comment), err)),
-    }
-}
-
-fn hashcode64_f64(comment: String) -> Results<u64> {
-    match comment.parse::<f64>() {
-        Ok(real) => Ok(hashcode64_f64_real(real)),
-        Err(err) => Err(Errs::strings(format!("{} parse to f64", comment), err)),
-    }
-}
-
-fn hashcode32_bl(comment: String) -> Results<u32> {
-    match comment.parse::<bool>() {
-        Ok(real) => Ok(hashcode32_bool_real(real)),
-        Err(err) => Err(Errs::strings(format!("{} parse to bool", comment), err)),
-    }
-}
-
-fn hashcode64_bl(comment: String) -> Results<u64> {
-    match comment.parse::<bool>() {
-        Ok(real) => Ok(hashcode64_bool_real(real)),
-        Err(err) => Err(Errs::strings(format!("{} parse to bool", comment), err)),
-    }
-}
-
-fn hashcode32_i32_real(real: i32) -> u32 {
+fn i32_to_crc32(real: i32) -> u32 {
     if real < 0 {
         real.add(2147483647).add(1) as u32
     } else {
@@ -401,11 +443,7 @@ fn hashcode32_i32_real(real: i32) -> u32 {
     }
 }
 
-fn hashcode64_i64_real(real: i64) -> u64 {
-    hashcode64_i64_trans(real).add(1)
-}
-
-fn hashcode64_i64_trans(real: i64) -> u64 {
+fn i64_to_crc64(real: i64) -> u64 {
     if real < 0 {
         real.add(9223372036854775807).add(1) as u64
     } else {
@@ -413,7 +451,7 @@ fn hashcode64_i64_trans(real: i64) -> u64 {
     }
 }
 
-fn hashcode32_f32_real(real: f32) -> u32 {
+fn f32_to_crc32(real: f32) -> u32 {
     if real > 0.0 {
         real.to_bits().add(2147483648)
     } else if real < 0.0 {
@@ -423,7 +461,11 @@ fn hashcode32_f32_real(real: f32) -> u32 {
     }
 }
 
-fn hashcode64_f64_real(real: f64) -> u64 {
+fn f32_to_crc64(real: f32) -> u64 {
+    f64_to_crc64(real as f64)
+}
+
+fn f64_to_crc64(real: f64) -> u64 {
     if real > 0.0 {
         real.to_bits().add(9223372036854775809)
     } else if real < 0.0 {
@@ -433,26 +475,10 @@ fn hashcode64_f64_real(real: f64) -> u64 {
     }
 }
 
-fn hashcode32_bool_real(real: bool) -> u32 {
-    if real {
-        1
-    } else {
-        0
-    }
-}
-
-fn hashcode64_bool_real(real: bool) -> u64 {
-    if real {
-        2
-    } else {
-        1
-    }
-}
-
 #[cfg(test)]
-mod hash_test {
-    use crate::cryptos::hash::{HashCRCHandler, HashCRCTypeHandler, HashMD5Handler};
+mod test {
     use crate::cryptos::hash::Hash;
+    use crate::cryptos::hash::HashHandler;
 
     #[test]
     fn md5_test() {
@@ -519,7 +545,7 @@ mod hash_test {
     }
 
     #[test]
-    fn hashcode32_test1() {
+    fn crc32_test1() {
         let bytes1 = "test1".as_bytes();
         let bytes2 = "test2".as_bytes();
 
@@ -530,7 +556,7 @@ mod hash_test {
     }
 
     #[test]
-    fn hashcode32_test2() {
+    fn crc32_test2() {
         let x1: i32 = -1;
         let x2: i32 = -2;
         let x3: i32 = -3;
@@ -584,7 +610,7 @@ mod hash_test {
     }
 
     #[test]
-    fn hashcode64_test1() {
+    fn crc64_test1() {
         let bytes1 = "test1".as_bytes();
         let bytes2 = "test2".as_bytes();
         let bytes3 = &[0x00];
@@ -616,7 +642,7 @@ mod hash_test {
     }
 
     #[test]
-    fn hashcode64_test2() {
+    fn crc64_test2() {
         // let x1: i64 = -1;
         let x2: i64 = -2;
         let x3: i64 = -3;
@@ -656,185 +682,170 @@ mod hash_test {
     }
 
     #[test]
-    fn hashcode64_test3() {
-        let sbl1 = String::from("true");
-        let sbl2 = String::from("false");
-        println!(
-            "u64 = {}, sbl1 = {}",
-            Hash::crc64_bool(sbl1.clone()).unwrap(),
-            sbl1.clone()
-        );
-        println!(
-            "u64 = {}, sbl2 = {}",
-            Hash::crc64_bool(sbl2.clone()).unwrap(),
-            sbl2.clone()
-        );
-
-        println!();
-
-        let sf640 = String::from("-123.34523412");
-        let sf641 = String::from("-0.1");
-        let sf642 = String::from("-0.0");
-        let sf643 = String::from("0.0");
-        let sf644 = String::from("0.00");
-        let sf645 = String::from("0.0000000000000000000000000001");
-        let sf646 = String::from("0.000000000000000000000000001");
-        let sf647 = String::from("0.00000000000000000000000001");
-        let sf648 = String::from("0.0000000000000000000000001");
-        let sf649 = String::from("1.0");
-        let sf6410 = String::from("1.34523411233211");
-        let sf6411 = String::from("12.3452341");
-        let sf6412 = String::from("12.34523411");
-        let sf6413 = String::from("12.345234115");
-        let sf6414 = String::from("12.345234119");
-        let sf6415 = String::from("12.34523412");
-        let sf6416 = String::from("12.345234123");
-        let sf6417 = String::from("123.34523412");
+    fn crc64_test3() {
+        let sf640 = -123.34523412;
+        let sf641: f32 = -0.1;
+        let sf642: f32 = -0.0;
+        let sf643: f32 = 0.0;
+        let sf644 = 0.00;
+        let sf645 = 0.0000000000000000000000000001;
+        let sf646 = 0.000000000000000000000000001;
+        let sf647 = 0.00000000000000000000000001;
+        let sf648 = 0.0000000000000000000000001;
+        let sf649: f32 = 1.0;
+        let sf6410 = 1.34523411233211;
+        let sf6411 = 12.3452341;
+        let sf6412 = 12.34523411;
+        let sf6413 = 12.345234115;
+        let sf6414 = 12.345234119;
+        let sf6415 = 12.34523412;
+        let sf6416 = 12.345234123;
+        let sf6417 = 123.34523412;
         println!(
             "u64 = {}, 0 = {}",
-            Hash::crc64_f64(sf640.clone()).unwrap(),
-            sf640.clone()
+            Hash::crc64(sf640),
+            sf640
         );
         println!(
             "u64 = {}, 1 = {}",
-            Hash::crc64_f64(sf641.clone()).unwrap(),
-            sf641.clone()
+            Hash::crc64(sf641),
+            sf641
         );
         println!(
             "u64 = {}, 2 = {}",
-            Hash::crc64_f64(sf642.clone()).unwrap(),
-            sf642.clone()
+            Hash::crc64(sf642),
+            sf642
         );
         println!(
             "u64 = {}, 3 = {}",
-            Hash::crc64_f64(sf643.clone()).unwrap(),
-            sf643.clone()
+            Hash::crc64(sf643),
+            sf643
         );
         println!(
             "u64 = {}, 4 = {}",
-            Hash::crc64_f64(sf644.clone()).unwrap(),
-            sf644.clone()
+            Hash::crc64(sf644),
+            sf644
         );
         println!(
             "u64 = {}, 5 = {}",
-            Hash::crc64_f64(sf645.clone()).unwrap(),
-            sf645.clone()
+            Hash::crc64(sf645),
+            sf645
         );
         println!(
             "u64 = {}, 6 = {}",
-            Hash::crc64_f64(sf646.clone()).unwrap(),
-            sf646.clone()
+            Hash::crc64(sf646),
+            sf646
         );
         println!(
             "u64 = {}, 7 = {}",
-            Hash::crc64_f64(sf647.clone()).unwrap(),
-            sf647.clone()
+            Hash::crc64(sf647),
+            sf647
         );
         println!(
             "u64 = {}, 8 = {}",
-            Hash::crc64_f64(sf648.clone()).unwrap(),
-            sf648.clone()
+            Hash::crc64(sf648),
+            sf648
         );
         println!(
             "u64 = {}, 9 = {}",
-            Hash::crc64_f64(sf649.clone()).unwrap(),
-            sf649.clone()
+            Hash::crc64(sf649),
+            sf649
         );
         println!(
             "u64 = {}, 10 = {}",
-            Hash::crc64_f64(sf6410.clone()).unwrap(),
-            sf6410.clone()
+            Hash::crc64(sf6410),
+            sf6410
         );
         println!(
             "u64 = {}, 11 = {}",
-            Hash::crc64_f64(sf6411.clone()).unwrap(),
-            sf6411.clone()
+            Hash::crc64(sf6411),
+            sf6411
         );
         println!(
             "u64 = {}, 12 = {}",
-            Hash::crc64_f64(sf6412.clone()).unwrap(),
-            sf6412.clone()
+            Hash::crc64(sf6412),
+            sf6412
         );
         println!(
             "u64 = {}, 13 = {}",
-            Hash::crc64_f64(sf6413.clone()).unwrap(),
-            sf6413.clone()
+            Hash::crc64(sf6413),
+            sf6413
         );
         println!(
             "u64 = {}, 14 = {}",
-            Hash::crc64_f64(sf6414.clone()).unwrap(),
-            sf6414.clone()
+            Hash::crc64(sf6414),
+            sf6414
         );
         println!(
             "u64 = {}, 15 = {}",
-            Hash::crc64_f64(sf6415.clone()).unwrap(),
-            sf6415.clone()
+            Hash::crc64(sf6415),
+            sf6415
         );
         println!(
             "u64 = {}, 16 = {}",
-            Hash::crc64_f64(sf6416.clone()).unwrap(),
-            sf6416.clone()
+            Hash::crc64(sf6416),
+            sf6416
         );
         println!(
             "u64 = {}, 17 = {}",
-            Hash::crc64_f64(sf6417.clone()).unwrap(),
-            sf6417.clone()
+            Hash::crc64(sf6417),
+            sf6417
         );
 
         println!();
 
-        let i0 = String::from("-9223372036854775808");
-        let i1 = String::from("-9223372036854775807");
-        let i2 = String::from("-1");
-        let i3 = String::from("-0");
-        let i4 = String::from("0");
-        let i5 = String::from("1");
-        let i6 = String::from("9223372036854775805");
-        let i7 = String::from("9223372036854775806");
+        let i0: i64 = -9223372036854775808;
+        let i1: i64 = -9223372036854775807;
+        let i2 = -1;
+        let i3 = -0;
+        let i4 = 0;
+        let i5 = 1;
+        let i6: i64 = 9223372036854775805;
+        let i7: i64 = 9223372036854775806;
         println!(
             "i64 = {}, i0 = {}",
-            Hash::crc64_i64(i0.clone()).unwrap(),
-            i0.clone()
+            Hash::crc64(i0),
+            i0
         );
         println!(
             "i64 = {}, i1 = {}",
-            Hash::crc64_i64(i1.clone()).unwrap(),
-            i1.clone()
+            Hash::crc64(i1),
+            i1
         );
         println!(
             "i64 = {}, i2 = {}",
-            Hash::crc64_i64(i2.clone()).unwrap(),
-            i2.clone()
+            Hash::crc64(i2),
+            i2
         );
         println!(
             "i64 = {}, i3 = {}",
-            Hash::crc64_i64(i3.clone()).unwrap(),
-            i3.clone()
+            Hash::crc64(i3),
+            i3
         );
         println!(
             "i64 = {}, i4 = {}",
-            Hash::crc64_i64(i4.clone()).unwrap(),
-            i4.clone()
+            Hash::crc64(i4),
+            i4
         );
         println!(
             "i64 = {}, i5 = {}",
-            Hash::crc64_i64(i5.clone()).unwrap(),
-            i5.clone()
+            Hash::crc64(i5),
+            i5
         );
         println!(
             "i64 = {}, i6 = {}",
-            Hash::crc64_i64(i6.clone()).unwrap(),
-            i6.clone()
+            Hash::crc64(i6),
+            i6
         );
         println!(
             "i64 = {}, i7 = {}",
-            Hash::crc64_i64(i7.clone()).unwrap(),
-            i7.clone()
+            Hash::crc64(i7),
+            i7
         );
     }
 
     #[test]
-    fn hashcode64_test() {
+    fn crc64_test4() {
         let t1 = String::from("test1");
         let t2 = String::from("test2");
         let bytes1 = "test1".as_bytes();

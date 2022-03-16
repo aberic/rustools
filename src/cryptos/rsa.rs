@@ -30,7 +30,6 @@ use crate::errors::Errs;
 use crate::errors::Results;
 use crate::io::file::Filer;
 use crate::io::file::FilerWriter;
-use crate::strings::StringHandler;
 use crate::strings::Strings;
 
 pub struct RSA {

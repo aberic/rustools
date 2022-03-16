@@ -19,7 +19,6 @@ use phf::{Map, phf_map};
 
 use crate::errors::{Errs, Results};
 use crate::strings::Strings;
-use crate::strings::StringHandler;
 
 pub struct Trans;
 
@@ -283,14 +282,14 @@ fn trans_string64_2_u32(string64: String) -> u32 {
 ///
 /// 左侧补齐，保证总长度是6
 fn trans_u32_2_string64_fit(uint32: u32) -> String {
-    Strings::left_fits(trans_u32_2_string64(uint32), "*".parse().unwrap(), 6)
+    Strings::left_fit(trans_u32_2_string64(uint32), "*".parse().unwrap(), 6)
 }
 
 /// 64进制字符串转u32
 ///
 /// 删除左侧多余
 fn trans_string64_2_u32_fit(string64: String) -> u32 {
-    trans_string64_2_u64(Strings::left_un_fits(string64, "*".parse().unwrap())) as u32
+    trans_string64_2_u64(Strings::left_un_fit(string64, "*".parse().unwrap())) as u32
 }
 
 /// u64转16进制数组
@@ -493,7 +492,6 @@ fn trans_i32_2_u64(res: i32) -> u64 {
 #[cfg(test)]
 mod trans_test {
     use crate::strings::Strings;
-    use crate::strings::StringHandler;
     use crate::Trans;
 
     #[test]
@@ -548,7 +546,7 @@ mod trans_test {
         let n = 100;
         let ns = Trans::u32_2_string64_fit(n);
         println!("ns = {}", ns);
-        let ns_un = Strings::left_un_fits(ns, "*".parse().unwrap());
+        let ns_un = Strings::left_un_fit(ns, "*".parse().unwrap());
         let ns2u = Trans::string64_2_u32(ns_un);
         println!("ns2u = {}", ns2u);
     }
