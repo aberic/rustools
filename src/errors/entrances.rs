@@ -14,7 +14,7 @@
 
 use std::fmt::{Display, Formatter, Result};
 
-use crate::errors::children::{DirExistError, DirNoExistError, FileExistError, FileNoExistError, StringError};
+use crate::errors::children::{DataExistError, DataNoExistError, DirExistError, DirNoExistError, FileExistError, FileNoExistError, StringError};
 
 trait ToolsStringErr<M, N>: Sized {
     fn string(_: M, _: N) -> Self;
@@ -29,9 +29,11 @@ trait ToolsString<M>: Sized {
 pub enum Error {
     StringError(StringError),
     DirExistError(DirExistError),
-    FileExistError(FileExistError),
     DirNoExistError(DirNoExistError),
+    FileExistError(FileExistError),
     FileNoExistError(FileNoExistError),
+    DataExistError(DataExistError),
+    DataNoExistError(DataNoExistError),
 }
 
 impl std::error::Error for Error {
@@ -39,9 +41,11 @@ impl std::error::Error for Error {
         match &self {
             Error::StringError(ref e) => Some(e),
             Error::DirExistError(ref e) => Some(e),
-            Error::FileExistError(ref e) => Some(e),
             Error::DirNoExistError(ref e) => Some(e),
+            Error::FileExistError(ref e) => Some(e),
             Error::FileNoExistError(ref e) => Some(e),
+            Error::DataExistError(ref e) => Some(e),
+            Error::DataNoExistError(ref e) => Some(e),
         }
     }
 }
@@ -54,6 +58,8 @@ impl Display for Error {
             Error::FileExistError(ref e) => e.fmt(f),
             Error::DirNoExistError(ref e) => e.fmt(f),
             Error::FileNoExistError(ref e) => e.fmt(f),
+            Error::DataExistError(ref e) => e.fmt(f),
+            Error::DataNoExistError(ref e) => e.fmt(f),
         }
     }
 }
@@ -70,21 +76,33 @@ impl From<DirExistError> for Error {
     }
 }
 
-impl From<FileExistError> for Error {
-    fn from(s: FileExistError) -> Self {
-        Error::FileExistError(s)
-    }
-}
-
 impl From<DirNoExistError> for Error {
     fn from(s: DirNoExistError) -> Self {
         Error::DirNoExistError(s)
     }
 }
 
+impl From<FileExistError> for Error {
+    fn from(s: FileExistError) -> Self {
+        Error::FileExistError(s)
+    }
+}
+
 impl From<FileNoExistError> for Error {
     fn from(s: FileNoExistError) -> Self {
         Error::FileNoExistError(s)
+    }
+}
+
+impl From<DataExistError> for Error {
+    fn from(s: DataExistError) -> Self {
+        Error::DataExistError(s)
+    }
+}
+
+impl From<DataNoExistError> for Error {
+    fn from(s: DataNoExistError) -> Self {
+        Error::DataNoExistError(s)
     }
 }
 
@@ -139,16 +157,24 @@ impl Errs {
         Error::from(DirExistError)
     }
 
-    pub fn file_exist_error() -> Error {
-        Error::from(FileExistError)
-    }
-
     pub fn dir_no_exist_error() -> Error {
         Error::from(DirNoExistError)
     }
 
+    pub fn file_exist_error() -> Error {
+        Error::from(FileExistError)
+    }
+
     pub fn file_no_exist_error() -> Error {
         Error::from(FileNoExistError)
+    }
+
+    pub fn data_exist_error() -> Error {
+        Error::from(DataExistError)
+    }
+
+    pub fn data_no_exist_error() -> Error {
+        Error::from(DataNoExistError)
     }
 }
 

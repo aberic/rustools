@@ -28,6 +28,7 @@ impl Display for StringError {
 
 impl std::error::Error for StringError {}
 
+//================== Dir start =====================
 #[derive(Debug, Clone)]
 pub struct DirExistError;
 
@@ -42,6 +43,19 @@ impl Display for DirExistError {
 impl std::error::Error for DirExistError {}
 
 #[derive(Debug, Clone)]
+pub struct DirNoExistError;
+
+impl Display for DirNoExistError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "dir not exist!")
+    }
+}
+
+impl std::error::Error for DirNoExistError {}
+//================== Dir end =====================
+
+//================== File start =====================
+#[derive(Debug, Clone)]
 pub struct FileExistError;
 
 /// 实现Display的trait，并实现fmt方法
@@ -55,23 +69,39 @@ impl Display for FileExistError {
 impl std::error::Error for FileExistError {}
 
 #[derive(Debug, Clone)]
-pub struct DirNoExistError;
-
-impl Display for DirNoExistError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "dir is not exist!")
-    }
-}
-
-impl std::error::Error for DirNoExistError {}
-
-#[derive(Debug, Clone)]
 pub struct FileNoExistError;
 
 impl Display for FileNoExistError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "file is not exist!")
+        write!(f, "file not exist!")
     }
 }
 
 impl std::error::Error for FileNoExistError {}
+//================== File end =====================
+
+//================== Data start =====================
+#[derive(Debug, Clone)]
+pub struct DataExistError;
+
+/// 实现Display的trait，并实现fmt方法
+impl Display for DataExistError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "data already exist!")
+    }
+}
+
+/// 实现Error的trait,因为没有子Error,不需要覆盖source()方法
+impl std::error::Error for DataExistError {}
+
+#[derive(Debug, Clone)]
+pub struct DataNoExistError;
+
+impl Display for DataNoExistError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "data not exist!")
+    }
+}
+
+impl std::error::Error for DataNoExistError {}
+//================== Data end =====================
