@@ -43,6 +43,12 @@ impl HexEncoder<&str> for Hex {
     }
 }
 
+impl HexEncoder<String> for Hex {
+    fn encode(bytes: String) -> String {
+        hex::encode(bytes)
+    }
+}
+
 impl HexDecoder<&str> for Hex {
     fn decode(src: &str) -> Results<Vec<u8>> {
         match hex::decode(src) {
@@ -68,24 +74,31 @@ mod hex_test {
 
     #[test]
     fn hex_test() {
-        let src = "hello world!".as_bytes();
+        let src = "hello world!";
+
         let ber = Hex::encode(src);
         let her = hex::encode(src);
         println!("ber = {}\nhex = {}", ber, her);
         let bdr = Hex::decode(ber).unwrap();
-        assert_eq!(src, bdr.as_slice());
+        assert_eq!(src.as_bytes(), bdr.as_slice());
 
-        let ber = Hex::encode(src.to_vec());
-        let her = hex::encode(src);
+        let ber = Hex::encode(src.to_string());
+        let her = hex::encode(src.to_string());
         println!("ber = {}\nhex = {}", ber, her);
         let bdr = Hex::decode(ber).unwrap();
-        assert_eq!(src, bdr.as_slice());
+        assert_eq!(src.as_bytes(), bdr.as_slice());
 
-        let ber = Hex::encode(src.to_vec());
+        let ber = Hex::encode(src.as_bytes().to_vec());
+        let her = hex::encode(src.as_bytes().to_vec());
+        println!("ber = {}\nhex = {}", ber, her);
+        let bdr = Hex::decode(ber).unwrap();
+        assert_eq!(src.as_bytes(), bdr.as_slice());
+
+        let ber = Hex::encode(src.as_bytes());
         let her = hex::encode(src);
         println!("ber = {}\nhex = {}", ber, her);
         let bdr = Hex::decode(ber.as_str()).unwrap();
-        assert_eq!(src, bdr.as_slice());
+        assert_eq!(src.as_bytes(), bdr.as_slice());
     }
 }
 
