@@ -176,6 +176,14 @@ impl Errs {
     pub fn data_no_exist_error() -> Error {
         Error::from(DataNoExistError)
     }
+
+    pub fn exist_error(msg: &str) -> Error {
+        Error::from(err_string(format!("{} already exist!", msg)))
+    }
+
+    pub fn no_exist_error(msg: &str) -> Error {
+        Error::from(err_string(format!("{} not exist!", msg)))
+    }
 }
 
 fn err_string(msg: String) -> Error {
