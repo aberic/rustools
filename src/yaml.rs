@@ -16,21 +16,24 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use serde_yaml::Value;
 
+use crate::Serde;
 use crate::errors::{Errs, Results};
 
+#[derive(Clone, Debug)]
 pub struct Yaml {
     value: serde_yaml::Value,
 }
 
+#[derive(Clone, Debug)]
 pub struct YamlArray {
     value: serde_yaml::Value,
 }
 
 pub trait YamlHandler {
     fn object<Object>(object: &Object) -> Results<Self>
-    where
-        Object: ?Sized + Serialize,
-        Self: std::marker::Sized;
+        where
+            Object: ?Sized + Serialize,
+            Self: std::marker::Sized;
 
     fn value(&self) -> Value;
 
@@ -43,8 +46,8 @@ pub trait YamlHandler {
     }
 
     fn to_object<Object>(&self) -> Results<Object>
-    where
-        Object: DeserializeOwned,
+        where
+            Object: DeserializeOwned,
     {
         match serde_yaml::from_value(self.value()) {
             Ok(t) => Ok(t),
@@ -53,8 +56,8 @@ pub trait YamlHandler {
     }
 
     fn obj_2_bytes<Object>(value: &Object) -> Results<Vec<u8>>
-    where
-        Object: ?Sized + Serialize,
+        where
+            Object: ?Sized + Serialize,
     {
         match serde_yaml::to_vec(value) {
             Ok(res) => Ok(res),
@@ -63,8 +66,8 @@ pub trait YamlHandler {
     }
 
     fn obj_2_string<Object>(value: &Object) -> Results<String>
-    where
-        Object: ?Sized + Serialize,
+        where
+            Object: ?Sized + Serialize,
     {
         match serde_yaml::to_string(value) {
             Ok(res) => Ok(res),
@@ -73,8 +76,8 @@ pub trait YamlHandler {
     }
 
     fn obj_2_value<Object>(value: &Object) -> Results<Value>
-    where
-        Object: ?Sized + Serialize,
+        where
+            Object: ?Sized + Serialize,
     {
         match serde_yaml::to_value(value) {
             Ok(res) => Ok(res),
@@ -83,8 +86,8 @@ pub trait YamlHandler {
     }
 
     fn bytes_2_obj<Object>(data: &[u8]) -> Results<Object>
-    where
-        Object: DeserializeOwned,
+        where
+            Object: DeserializeOwned,
     {
         match serde_yaml::from_slice(data) {
             Ok(t) => Ok(t),
@@ -93,8 +96,8 @@ pub trait YamlHandler {
     }
 
     fn string_2_obj<Object>(data: &str) -> Results<Object>
-    where
-        Object: DeserializeOwned,
+        where
+            Object: DeserializeOwned,
     {
         match serde_yaml::from_str(data) {
             Ok(t) => Ok(t),
@@ -103,8 +106,8 @@ pub trait YamlHandler {
     }
 
     fn value_2_obj<Object>(data: Value) -> Results<Object>
-    where
-        Object: DeserializeOwned,
+        where
+            Object: DeserializeOwned,
     {
         match serde_yaml::from_value(data) {
             Ok(t) => Ok(t),
@@ -158,8 +161,8 @@ pub trait YamlGet<Param> {
 
 impl YamlHandler for Yaml {
     fn object<Object>(object: &Object) -> Results<Self>
-    where
-        Object: ?Sized + Serialize,
+        where
+            Object: ?Sized + Serialize,
     {
         match serde_yaml::to_value(object) {
             Ok(res) => Ok(Yaml { value: res }),
@@ -322,53 +325,23 @@ impl YamlGet<&str> for Yaml {
     }
 
     fn get_string(&self, param: &str) -> Results<String> {
-        match self.value[param].as_str() {
-            Some(res) => Ok(res.to_string()),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans string!",
-                param
-            ))),
-        }
+        Serde::param_string(self.value[param].as_str(), param)
     }
 
     fn get_u64(&self, param: &str) -> Results<u64> {
-        match self.value[param].as_u64() {
-            Some(res) => Ok(res),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans u64!",
-                param
-            ))),
-        }
+        Serde::param_u64(self.value[param].as_u64(), param)
     }
 
     fn get_i64(&self, param: &str) -> Results<i64> {
-        match self.value[param].as_i64() {
-            Some(res) => Ok(res),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans i64!",
-                param
-            ))),
-        }
+        Serde::param_i64(self.value[param].as_i64(), param)
     }
 
     fn get_f64(&self, param: &str) -> Results<f64> {
-        match self.value[param].as_f64() {
-            Some(res) => Ok(res),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans f64!",
-                param
-            ))),
-        }
+        Serde::param_f64(self.value[param].as_f64(), param)
     }
 
     fn get_bool(&self, param: &str) -> Results<bool> {
-        match self.value[param].as_bool() {
-            Some(res) => Ok(res),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans bool!",
-                param
-            ))),
-        }
+        Serde::param_bool(self.value[param].as_bool(), param)
     }
 
     fn get_object(&self, param: &str) -> Results<Yaml> {
@@ -398,53 +371,23 @@ impl YamlGet<String> for Yaml {
     }
 
     fn get_string(&self, param: String) -> Results<String> {
-        match self.value[param.clone()].as_str() {
-            Some(res) => Ok(res.to_string()),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans string!",
-                param
-            ))),
-        }
+        Serde::param_string(self.value[param.clone()].as_str(), param.as_str())
     }
 
     fn get_u64(&self, param: String) -> Results<u64> {
-        match self.value[param.clone()].as_u64() {
-            Some(res) => Ok(res),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans u64!",
-                param
-            ))),
-        }
+        Serde::param_u64(self.value[param.clone()].as_u64(), param.as_str())
     }
 
     fn get_i64(&self, param: String) -> Results<i64> {
-        match self.value[param.clone()].as_i64() {
-            Some(res) => Ok(res),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans i64!",
-                param
-            ))),
-        }
+        Serde::param_i64(self.value[param.clone()].as_i64(), param.as_str())
     }
 
     fn get_f64(&self, param: String) -> Results<f64> {
-        match self.value[param.clone()].as_f64() {
-            Some(res) => Ok(res),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans f64!",
-                param
-            ))),
-        }
+        Serde::param_f64(self.value[param.clone()].as_f64(), param.as_str())
     }
 
     fn get_bool(&self, param: String) -> Results<bool> {
-        match self.value[param.clone()].as_bool() {
-            Some(res) => Ok(res),
-            None => Err(Errs::string(format!(
-                "param {} not found or can not trans bool!",
-                param
-            ))),
-        }
+        Serde::param_bool(self.value[param.clone()].as_bool(), param.as_str())
     }
 
     fn get_object(&self, param: String) -> Results<Yaml> {
@@ -470,8 +413,8 @@ impl YamlGet<String> for Yaml {
 
 impl YamlHandler for YamlArray {
     fn object<Object>(object: &Object) -> Results<Self>
-    where
-        Object: ?Sized + Serialize,
+        where
+            Object: ?Sized + Serialize,
     {
         match serde_yaml::to_value(object) {
             Ok(res) => Ok(YamlArray { value: res }),
@@ -573,65 +516,35 @@ impl YamlGet<usize> for YamlArray {
 
     fn get_string(&self, index: usize) -> Results<String> {
         match self.value.get(index) {
-            Some(res) => match res.as_str() {
-                Some(res) => Ok(res.to_string()),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
+            Some(res) => Serde::index_string(res.as_str(), index.to_string().as_str()),
             None => Err(Errs::str("index out of bound while yaml array get string!")),
         }
     }
 
     fn get_u64(&self, index: usize) -> Results<u64> {
         match self.value.get(index) {
-            Some(res) => match res.as_u64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
+            Some(res) => Serde::index_u64(res.as_u64(), index.to_string().as_str()),
             None => Err(Errs::str("index out of bound while yaml array get u64!")),
         }
     }
 
     fn get_i64(&self, index: usize) -> Results<i64> {
         match self.value.get(index) {
-            Some(res) => match res.as_i64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
+            Some(res) => Serde::index_i64(res.as_i64(), index.to_string().as_str()),
             None => Err(Errs::str("index out of bound while yaml array get i64!")),
         }
     }
 
     fn get_f64(&self, index: usize) -> Results<f64> {
         match self.value.get(index) {
-            Some(res) => match res.as_f64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
+            Some(res) => Serde::index_f64(res.as_f64(), index.to_string().as_str()),
             None => Err(Errs::str("index out of bound while yaml array get f64!")),
         }
     }
 
     fn get_bool(&self, index: usize) -> Results<bool> {
         match self.value.get(index) {
-            Some(res) => match res.as_bool() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
+            Some(res) => Serde::index_bool(res.as_bool(), index.to_string().as_str()),
             None => Err(Errs::str("index out of bound while yaml array get bool!")),
         }
     }
@@ -669,68 +582,23 @@ impl YamlGet<i32> for YamlArray {
     }
 
     fn get_string(&self, index: i32) -> Results<String> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_str() {
-                Some(res) => Ok(res.to_string()),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get string!")),
-        }
+        self.get_string(index as usize)
     }
 
     fn get_u64(&self, index: i32) -> Results<u64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_u64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get u64!")),
-        }
+        self.get_u64(index as usize)
     }
 
     fn get_i64(&self, index: i32) -> Results<i64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_i64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get i64!")),
-        }
+        self.get_i64(index as usize)
     }
 
     fn get_f64(&self, index: i32) -> Results<f64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_f64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get f64!")),
-        }
+        self.get_f64(index as usize)
     }
 
     fn get_bool(&self, index: i32) -> Results<bool> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_bool() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get bool!")),
-        }
+        self.get_bool(index as usize)
     }
 
     fn get_object(&self, index: i32) -> Results<Yaml> {
@@ -760,68 +628,23 @@ impl YamlGet<u32> for YamlArray {
     }
 
     fn get_string(&self, index: u32) -> Results<String> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_str() {
-                Some(res) => Ok(res.to_string()),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get string!")),
-        }
+        self.get_string(index as usize)
     }
 
     fn get_u64(&self, index: u32) -> Results<u64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_u64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get u64!")),
-        }
+        self.get_u64(index as usize)
     }
 
     fn get_i64(&self, index: u32) -> Results<i64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_i64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get i64!")),
-        }
+        self.get_i64(index as usize)
     }
 
     fn get_f64(&self, index: u32) -> Results<f64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_f64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get f64!")),
-        }
+        self.get_f64(index as usize)
     }
 
     fn get_bool(&self, index: u32) -> Results<bool> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_bool() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get bool!")),
-        }
+        self.get_bool(index as usize)
     }
 
     fn get_object(&self, index: u32) -> Results<Yaml> {
@@ -851,68 +674,23 @@ impl YamlGet<u64> for YamlArray {
     }
 
     fn get_string(&self, index: u64) -> Results<String> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_str() {
-                Some(res) => Ok(res.to_string()),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get string!")),
-        }
+        self.get_string(index as usize)
     }
 
     fn get_u64(&self, index: u64) -> Results<u64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_u64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get u64!")),
-        }
+        self.get_u64(index as usize)
     }
 
     fn get_i64(&self, index: u64) -> Results<i64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_i64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get i64!")),
-        }
+        self.get_i64(index as usize)
     }
 
     fn get_f64(&self, index: u64) -> Results<f64> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_f64() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get f64!")),
-        }
+        self.get_f64(index as usize)
     }
 
     fn get_bool(&self, index: u64) -> Results<bool> {
-        match self.value.get(index as usize) {
-            Some(res) => match res.as_bool() {
-                Some(res) => Ok(res),
-                None => Err(Errs::string(format!(
-                    "value can not get from yaml array while index is {}!",
-                    index
-                ))),
-            },
-            None => Err(Errs::str("index out of bound while yaml array get bool!")),
-        }
+        self.get_bool(index as usize)
     }
 
     fn get_object(&self, index: u64) -> Results<Yaml> {

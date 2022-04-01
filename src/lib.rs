@@ -22,6 +22,7 @@ pub use env::Env;
 pub use rands::Rand;
 pub use time::Time;
 pub use trans::Trans;
+use crate::errors::{Errs, Results};
 
 pub mod concurrent;
 pub mod cryptos;
@@ -40,3 +41,131 @@ pub mod yaml;
 mod channel;
 mod compress;
 pub mod log;
+
+struct Serde;
+
+enum SerdeType{
+    Param, Index
+}
+
+impl Serde {
+    fn param_string(op: Option<&str>, value: &str) -> Results<String> {
+        string(op, SerdeType::Param, value)
+    }
+
+    fn param_u64(op: Option<u64>, value: &str) -> Results<u64> {
+        u64(op, SerdeType::Param, value)
+    }
+
+    fn param_i64(op: Option<i64>, value: &str) -> Results<i64> {
+        i64(op, SerdeType::Param, value)
+    }
+
+    fn param_f64(op: Option<f64>, value: &str) -> Results<f64> {
+        f64(op, SerdeType::Param, value)
+    }
+
+    fn param_bool(op: Option<bool>, value: &str) -> Results<bool> {
+        bool(op, SerdeType::Param, value)
+    }
+
+    fn index_string(op: Option<&str>, value: &str) -> Results<String> {
+        string(op, SerdeType::Index, value)
+    }
+
+    fn index_u64(op: Option<u64>, value: &str) -> Results<u64> {
+        u64(op, SerdeType::Index, value)
+    }
+
+    fn index_i64(op: Option<i64>, value: &str) -> Results<i64> {
+        i64(op, SerdeType::Index, value)
+    }
+
+    fn index_f64(op: Option<f64>, value: &str) -> Results<f64> {
+        f64(op, SerdeType::Index, value)
+    }
+
+    fn index_bool(op: Option<bool>, value: &str) -> Results<bool> {
+        bool(op, SerdeType::Index, value)
+    }
+}
+
+fn string(op: Option<&str>, serde_type: SerdeType, value: &str) -> Results<String> {
+    match op {
+        Some(res) => Ok(res.to_string()),
+        None => match serde_type {
+            SerdeType::Param => Err(Errs::string(format!(
+                "param {} not found or can not trans string!",
+                value
+            ))),
+            SerdeType::Index => Err(Errs::string(format!(
+                "value can not get from yaml array while index is {}!",
+                value
+            ))),
+        }
+    }
+}
+
+fn u64(op: Option<u64>, serde_type: SerdeType, value: &str) -> Results<u64> {
+    match op {
+        Some(res) => Ok(res),
+        None => match serde_type {
+            SerdeType::Param => Err(Errs::string(format!(
+                "param {} not found or can not trans u64!",
+                value
+            ))),
+            SerdeType::Index => Err(Errs::string(format!(
+                "value can not get from yaml array while index is {}!",
+                value
+            ))),
+        }
+    }
+}
+
+fn i64(op: Option<i64>, serde_type: SerdeType, value: &str) -> Results<i64> {
+    match op {
+        Some(res) => Ok(res),
+        None => match serde_type {
+            SerdeType::Param => Err(Errs::string(format!(
+                "param {} not found or can not trans i64!",
+                value
+            ))),
+            SerdeType::Index => Err(Errs::string(format!(
+                "value can not get from yaml array while index is {}!",
+                value
+            ))),
+        }
+    }
+}
+
+fn f64(op: Option<f64>, serde_type: SerdeType, value: &str) -> Results<f64> {
+    match op {
+        Some(res) => Ok(res),
+        None => match serde_type {
+            SerdeType::Param => Err(Errs::string(format!(
+                "param {} not found or can not trans f64!",
+                value
+            ))),
+            SerdeType::Index => Err(Errs::string(format!(
+                "value can not get from yaml array while index is {}!",
+                value
+            ))),
+        }
+    }
+}
+
+fn bool(op: Option<bool>, serde_type: SerdeType, value: &str) -> Results<bool> {
+    match op {
+        Some(res) => Ok(res),
+        None => match serde_type {
+            SerdeType::Param => Err(Errs::string(format!(
+                "param {} not found or can not trans bool!",
+                value
+            ))),
+            SerdeType::Index => Err(Errs::string(format!(
+                "value can not get from yaml array while index is {}!",
+                value
+            ))),
+        }
+    }
+}

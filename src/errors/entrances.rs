@@ -198,12 +198,12 @@ fn err_str(msg: &str) -> Error {
 
 fn err_strs<Err: ToString>(msg: &str, err: Err) -> Error {
     Error::StringError(StringError {
-        error_msg: format!("{}: {}", msg, err.to_string()),
+        error_msg: format!("{} - {}", msg, err.to_string()),
     })
 }
 
 fn err_strings<Err: ToString>(msg: String, err: Err) -> Error {
     Error::StringError(StringError {
-        error_msg: format!("{}: {}", msg, err.to_string()),
+        error_msg: format!("{} - {}", msg, err.to_string()),
     })
 }
