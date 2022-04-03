@@ -22,6 +22,181 @@ use crate::strings::Strings;
 
 pub struct Trans;
 
+pub trait TransHandler<T> {
+    /// 16进制数组转u64
+    ///
+    /// 字节数组长度不得超过8，超过将溢出
+    fn bytes_2_u64(bs: T) -> Results<u64>;
+
+    /// 16进制数组转u64
+    ///
+    /// 字节数组长度不得超过8，超过将溢出
+    fn bytes_2_u64_as_usize(bs: T) -> Results<usize>;
+
+    /// 16进制数组转u48
+    ///
+    /// 字节数组长度不得超过6，超过将溢出
+    fn bytes_2_u48(bs: T) -> Results<u64>;
+
+    /// 16进制数组转u48
+    ///
+    /// 字节数组长度不得超过6，超过将溢出
+    fn bytes_2_u48_as_usize(bs: T) -> Results<usize>;
+
+    /// 16进制数组转u40
+    ///
+    /// 字节数组长度不得超过6，超过将溢出
+    fn bytes_2_u40(bs: T) -> Results<u64>;
+
+    /// 16进制数组转u40
+    ///
+    /// 字节数组长度不得超过6，超过将溢出
+    fn bytes_2_u40_as_usize(bs: T) -> Results<usize>;
+
+    /// 16进制数组转u32
+    ///
+    /// 字节数组长度不得超过4，超过将溢出
+    fn bytes_2_u32(bs: T) -> Results<u32>;
+
+    /// 16进制数组转u32
+    ///
+    /// 字节数组长度不得超过4，超过将溢出
+    fn bytes_2_u32_as_usize(bs: T) -> Results<usize>;
+
+    /// 16进制数组转u32，但返回u64
+    ///
+    /// 字节数组长度不得超过4，超过将溢出
+    fn bytes_2_u32_as_u64(bs: T) -> Results<u64>;
+
+    /// 16进制数组转u16
+    ///
+    /// 字节数组长度不得超过2，超过将溢出
+    fn bytes_2_u16(bs: T) -> Results<u16>;
+
+    /// 16进制数组转u16
+    ///
+    /// 字节数组长度不得超过2，超过将溢出
+    fn bytes_2_u16_as_u32(bs: T) -> Results<u32>;
+
+    /// 16进制数组转u16
+    ///
+    /// 字节数组长度不得超过2，超过将溢出
+    fn bytes_2_u16_as_u64(bs: T) -> Results<u64>;
+
+    /// 16进制数组转u16
+    ///
+    /// 字节数组长度不得超过2，超过将溢出
+    fn bytes_2_u16_as_usize(bs: T) -> Results<usize>;
+}
+
+impl TransHandler<Vec<u8>> for Trans {
+    fn bytes_2_u64(bs: Vec<u8>) -> Results<u64> {
+        trans_bytes_2_u64(bs)
+    }
+
+    fn bytes_2_u64_as_usize(bs: Vec<u8>) -> Results<usize> {
+        Ok(trans_bytes_2_u64(bs)? as usize)
+    }
+
+    fn bytes_2_u48(bs: Vec<u8>) -> Results<u64> {
+        trans_bytes_2_u48(bs)
+    }
+
+    fn bytes_2_u48_as_usize(bs: Vec<u8>) -> Results<usize> {
+        Ok(trans_bytes_2_u48(bs)? as usize)
+    }
+
+    fn bytes_2_u40(bs: Vec<u8>) -> Results<u64> {
+        trans_bytes_2_u40(bs)
+    }
+
+    fn bytes_2_u40_as_usize(bs: Vec<u8>) -> Results<usize> {
+        Ok(trans_bytes_2_u40(bs)? as usize)
+    }
+
+    fn bytes_2_u32(bs: Vec<u8>) -> Results<u32> {
+        trans_bytes_2_u32(bs)
+    }
+
+    fn bytes_2_u32_as_usize(bs: Vec<u8>) -> Results<usize> {
+        Ok(trans_bytes_2_u32_as_u64(bs)? as usize)
+    }
+
+    fn bytes_2_u32_as_u64(bs: Vec<u8>) -> Results<u64> {
+        trans_bytes_2_u32_as_u64(bs)
+    }
+
+    fn bytes_2_u16(bs: Vec<u8>) -> Results<u16> {
+        trans_bytes_2_u16(bs)
+    }
+
+    fn bytes_2_u16_as_u32(bs: Vec<u8>) -> Results<u32> {
+        trans_bytes_2_u16_as_u32(bs)
+    }
+
+    fn bytes_2_u16_as_u64(bs: Vec<u8>) -> Results<u64> {
+        trans_bytes_2_u16_as_u64(bs)
+    }
+
+    fn bytes_2_u16_as_usize(bs: Vec<u8>) -> Results<usize> {
+        Ok(trans_bytes_2_u16_as_u64(bs)? as usize)
+    }
+}
+
+impl TransHandler<&[u8]> for Trans {
+    fn bytes_2_u64(bs: &[u8]) -> Results<u64> {
+        trans_bytes_2_u64_4_u8(bs)
+    }
+
+    fn bytes_2_u64_as_usize(bs: &[u8]) -> Results<usize> {
+        Ok(trans_bytes_2_u64_4_u8(bs)? as usize)
+    }
+
+    fn bytes_2_u48(bs: &[u8]) -> Results<u64> {
+        trans_bytes_2_u48_4_u8(bs)
+    }
+
+    fn bytes_2_u48_as_usize(bs: &[u8]) -> Results<usize> {
+        Ok(trans_bytes_2_u48_4_u8(bs)? as usize)
+    }
+
+    fn bytes_2_u40(bs: &[u8]) -> Results<u64> {
+        trans_bytes_2_u40_4_u8(bs)
+    }
+
+    fn bytes_2_u40_as_usize(bs: &[u8]) -> Results<usize> {
+        Ok(trans_bytes_2_u40_4_u8(bs)? as usize)
+    }
+
+    fn bytes_2_u32(bs: &[u8]) -> Results<u32> {
+        trans_bytes_2_u32_4_u8(bs)
+    }
+
+    fn bytes_2_u32_as_usize(bs: &[u8]) -> Results<usize> {
+        Ok(trans_bytes_2_u32_as_u64_4_u8(bs)? as usize)
+    }
+
+    fn bytes_2_u32_as_u64(bs: &[u8]) -> Results<u64> {
+        trans_bytes_2_u32_as_u64_4_u8(bs)
+    }
+
+    fn bytes_2_u16(bs: &[u8]) -> Results<u16> {
+        trans_bytes_2_u16_4_u8(bs)
+    }
+
+    fn bytes_2_u16_as_u32(bs: &[u8]) -> Results<u32> {
+        trans_bytes_2_u16_as_u32_4_u8(bs)
+    }
+
+    fn bytes_2_u16_as_u64(bs: &[u8]) -> Results<u64> {
+        trans_bytes_2_u16_as_u64_4_u8(bs)
+    }
+
+    fn bytes_2_u16_as_usize(bs: &[u8]) -> Results<usize> {
+        Ok(trans_bytes_2_u16_as_u64_4_u8(bs)? as usize)
+    }
+}
+
 impl Trans {
     /// u64转64进制字符串<p><p>
     ///
@@ -68,23 +243,9 @@ impl Trans {
         trans_u64_2_bytes(uint64)
     }
 
-    /// 16进制数组转u64
-    ///
-    /// 字节数组长度不得超过8，超过将溢出
-    pub fn bytes_2_u64(bs: Vec<u8>) -> Results<u64> {
-        trans_bytes_2_u64(bs)
-    }
-
     /// u48转16进制数组
     pub fn u48_2_bytes(uint64: u64) -> Vec<u8> {
         trans_u48_2_bytes(uint64)
-    }
-
-    /// 16进制数组转u48
-    ///
-    /// 字节数组长度不得超过6，超过将溢出
-    pub fn bytes_2_u48(bs: Vec<u8>) -> Results<u64> {
-        trans_bytes_2_u48(bs)
     }
 
     /// u40转16进制数组
@@ -92,42 +253,14 @@ impl Trans {
         trans_u40_2_bytes(uint64)
     }
 
-    /// 16进制数组转u40
-    ///
-    /// 字节数组长度不得超过6，超过将溢出
-    pub fn bytes_2_u40(bs: Vec<u8>) -> Results<u64> {
-        trans_bytes_2_u40(bs)
-    }
-
     /// u32转16进制数组
     pub fn u32_2_bytes(uint32: u32) -> Vec<u8> {
         trans_u32_2_bytes(uint32)
     }
 
-    /// 16进制数组转u32
-    ///
-    /// 字节数组长度不得超过4，超过将溢出
-    pub fn bytes_2_u32(bs: Vec<u8>) -> Results<u32> {
-        trans_bytes_2_u32(bs)
-    }
-
-    /// 16进制数组转u32，但返回u64
-    ///
-    /// 字节数组长度不得超过4，超过将溢出
-    pub fn bytes_2_u32_as_u64(bs: Vec<u8>) -> Results<u64> {
-        trans_bytes_2_u32_as_u64(bs)
-    }
-
     /// u16转16进制数组
     pub fn u16_2_bytes(uint16: u16) -> Vec<u8> {
         trans_u16_2_bytes(uint16)
-    }
-
-    /// 16进制数组转u16
-    ///
-    /// 字节数组长度不得超过2，超过将溢出
-    pub fn bytes_2_u16(bs: Vec<u8>) -> Results<u16> {
-        trans_bytes_2_u16(bs)
     }
 
     pub fn i64_2_u64(res: i64) -> u64 {
@@ -317,14 +450,40 @@ fn trans_bytes_2_u64(bs: Vec<u8>) -> Results<u64> {
             bs_len
         )))
     } else {
-        let mut res: u64 = 0;
-        let mut i = 0;
-        while i < bs_len {
-            res += (bs[i] as u64) * 1 << (8 * (bs_len - i - 1));
-            i += 1;
-        }
-        Ok(res)
+        trans_u64_utils(bs_len, bs)
     }
+}
+
+fn trans_bytes_2_u64_4_u8(bs: &[u8]) -> Results<u64> {
+    let bs_len = bs.len();
+    if bs_len > 8 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 8, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u64_utils_4_u8(bs_len, bs)
+    }
+}
+
+fn trans_u64_utils_4_u8(bs_len: usize, bs: &[u8]) -> Results<u64> {
+    let mut res: u64 = 0;
+    let mut i = 0;
+    while i < bs_len {
+        res += (bs[i] as u64) * 1 << (8 * (bs_len - i - 1));
+        i += 1;
+    }
+    Ok(res)
+}
+
+fn trans_u64_utils(bs_len: usize, bs: Vec<u8>) -> Results<u64> {
+    let mut res: u64 = 0;
+    let mut i = 0;
+    while i < bs_len {
+        res += (bs[i] as u64) * 1 << (8 * (bs_len - i - 1));
+        i += 1;
+    }
+    Ok(res)
 }
 
 /// u48转16进制数组
@@ -350,13 +509,19 @@ fn trans_bytes_2_u48(bs: Vec<u8>) -> Results<u64> {
             bs_len
         )))
     } else {
-        let mut res: u64 = 0;
-        let mut i = 0;
-        while i < bs_len {
-            res += (bs[i] as u64) * 1 << (8 * (bs_len - i - 1));
-            i += 1;
-        }
-        Ok(res)
+        trans_u64_utils(bs_len, bs)
+    }
+}
+
+fn trans_bytes_2_u48_4_u8(bs: &[u8]) -> Results<u64> {
+    let bs_len = bs.len();
+    if bs_len > 6 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 6, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u64_utils_4_u8(bs_len, bs)
     }
 }
 
@@ -382,13 +547,19 @@ fn trans_bytes_2_u40(bs: Vec<u8>) -> Results<u64> {
             bs_len
         )))
     } else {
-        let mut res: u64 = 0;
-        let mut i = 0;
-        while i < bs_len {
-            res += (bs[i] as u64) * 1 << (8 * (bs_len - i - 1));
-            i += 1;
-        }
-        Ok(res)
+        trans_u64_utils(bs_len, bs)
+    }
+}
+
+fn trans_bytes_2_u40_4_u8(bs: &[u8]) -> Results<u64> {
+    let bs_len = bs.len();
+    if bs_len > 5 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 5, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u64_utils_4_u8(bs_len, bs)
     }
 }
 
@@ -413,14 +584,40 @@ fn trans_bytes_2_u32(bs: Vec<u8>) -> Results<u32> {
             bs_len
         )))
     } else {
-        let mut res: u32 = 0;
-        let mut i = 0;
-        while i < bs_len {
-            res += (bs[i] as u32) * 1 << (8 * (bs_len - i - 1));
-            i += 1;
-        }
-        Ok(res)
+        trans_u32_utils(bs_len, bs)
     }
+}
+
+fn trans_bytes_2_u32_4_u8(bs: &[u8]) -> Results<u32> {
+    let bs_len = bs.len();
+    if bs_len > 4 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 4, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u32_utils_4_u8(bs_len, bs)
+    }
+}
+
+fn trans_u32_utils_4_u8(bs_len: usize, bs: &[u8]) -> Results<u32> {
+    let mut res: u32 = 0;
+    let mut i = 0;
+    while i < bs_len {
+        res += (bs[i] as u32) * 1 << (8 * (bs_len - i - 1));
+        i += 1;
+    }
+    Ok(res)
+}
+
+fn trans_u32_utils(bs_len: usize, bs: Vec<u8>) -> Results<u32> {
+    let mut res: u32 = 0;
+    let mut i = 0;
+    while i < bs_len {
+        res += (bs[i] as u32) * 1 << (8 * (bs_len - i - 1));
+        i += 1;
+    }
+    Ok(res)
 }
 
 /// 16进制数组转u32，但返回u64
@@ -434,13 +631,19 @@ fn trans_bytes_2_u32_as_u64(bs: Vec<u8>) -> Results<u64> {
             bs_len
         )))
     } else {
-        let mut res: u64 = 0;
-        let mut i = 0;
-        while i < bs_len {
-            res += (bs[i] as u64) * 1 << (8 * (bs_len - i - 1));
-            i += 1;
-        }
-        Ok(res)
+        trans_u64_utils(bs_len, bs)
+    }
+}
+
+fn trans_bytes_2_u32_as_u64_4_u8(bs: &[u8]) -> Results<u64> {
+    let bs_len = bs.len();
+    if bs_len > 4 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 4, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u64_utils_4_u8(bs_len, bs)
     }
 }
 
@@ -463,13 +666,93 @@ fn trans_bytes_2_u16(bs: Vec<u8>) -> Results<u16> {
             bs_len
         )))
     } else {
-        let mut res: u16 = 0;
-        let mut i = 0;
-        while i < bs_len {
-            res += (bs[i] as u16) * 1 << (8 * (bs_len - i - 1));
-            i += 1;
-        }
-        Ok(res)
+        trans_u16_utils(bs_len, bs)
+    }
+}
+
+fn trans_u16_utils(bs_len: usize, bs: Vec<u8>) -> Results<u16> {
+    let mut res: u16 = 0;
+    let mut i = 0;
+    while i < bs_len {
+        res += (bs[i] as u16) * 1 << (8 * (bs_len - i - 1));
+        i += 1;
+    }
+    Ok(res)
+}
+
+fn trans_bytes_2_u16_4_u8(bs: &[u8]) -> Results<u16> {
+    let bs_len = bs.len();
+    if bs_len > 2 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 2, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u16_utils_4_u8(bs_len, bs)
+    }
+}
+
+fn trans_u16_utils_4_u8(bs_len: usize, bs: &[u8]) -> Results<u16> {
+    let mut res: u16 = 0;
+    let mut i = 0;
+    while i < bs_len {
+        res += (bs[i] as u16) * 1 << (8 * (bs_len - i - 1));
+        i += 1;
+    }
+    Ok(res)
+}
+
+/// 16进制数组转u16
+///
+/// 字节数组长度不得超过2，超过将溢出
+fn trans_bytes_2_u16_as_u32(bs: Vec<u8>) -> Results<u32> {
+    let bs_len = bs.len();
+    if bs_len > 2 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 2, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u32_utils(bs_len, bs)
+    }
+}
+
+fn trans_bytes_2_u16_as_u32_4_u8(bs: &[u8]) -> Results<u32> {
+    let bs_len = bs.len();
+    if bs_len > 2 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 2, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u32_utils_4_u8(bs_len, bs)
+    }
+}
+
+/// 16进制数组转u16
+///
+/// 字节数组长度不得超过2，超过将溢出
+fn trans_bytes_2_u16_as_u64(bs: Vec<u8>) -> Results<u64> {
+    let bs_len = bs.len();
+    if bs_len > 2 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 2, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u64_utils(bs_len, bs)
+    }
+}
+
+fn trans_bytes_2_u16_as_u64_4_u8(bs: &[u8]) -> Results<u64> {
+    let bs_len = bs.len();
+    if bs_len > 2 {
+        Err(Errs::string(format!(
+            "trans bytes 2 u16 out of bounds, except le 2, but receive {}",
+            bs_len
+        )))
+    } else {
+        trans_u64_utils_4_u8(bs_len, bs)
     }
 }
 
@@ -493,6 +776,7 @@ fn trans_i32_2_u64(res: i32) -> u64 {
 mod trans_test {
     use crate::strings::Strings;
     use crate::Trans;
+    use crate::trans::TransHandler;
 
     #[test]
     fn trans_test1() {

@@ -18,30 +18,6 @@ use crate::errors::{Errs, Results};
 
 pub struct Vector;
 
-pub trait VectorHandlers {
-    fn modify<T: Clone>(source: Vec<T>, target: Vec<T>, start: usize) -> Vec<T>;
-    fn sub<T: Clone>(source: Vec<T>, start: usize, end: usize) -> Results<Vec<T>>;
-    fn sub_last<T: Clone>(source: Vec<T>, start: usize, last: usize) -> Results<Vec<T>>;
-
-    fn append<T: Clone>(source: Vec<T>, target: Vec<T>) -> Vec<T>;
-
-    fn appends<T: Clone>(source: Vec<T>, targets: Vec<Vec<T>>) -> Vec<T>;
-
-    fn appender<T: Clone>(targets: Vec<Vec<T>>) -> Vec<T>;
-
-    fn find_last_eq_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<u8>>;
-
-    fn find_eq_vec_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<Vec<u8>>>;
-    fn create_empty_bytes(len: usize) -> Vec<u8>;
-    fn create_empty<T>(len: usize) -> Vec<T>;
-    fn is_fill(bytes: Vec<u8>) -> bool;
-    fn is_empty(bytes: Vec<u8>) -> bool;
-    fn print<T>(source: Vec<T>)
-        where
-            T: Clone,
-            T: Display;
-}
-
 pub trait VectorHandler<T> {
     /// 检查字节数组是否被填充，即数组中任意字节不为`0x00`
     fn is_fill(bytes: T) -> bool;
