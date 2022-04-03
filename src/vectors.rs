@@ -18,92 +18,39 @@ use crate::errors::{Errs, Results};
 
 pub struct Vector;
 
-pub trait VectorHandler {
-    /// 变更数组内容
-    ///
-    /// source 原始数组
-    ///
-    /// target 变更内容
-    ///
-    /// start 起始下标
+pub trait VectorHandlers {
     fn modify<T: Clone>(source: Vec<T>, target: Vec<T>, start: usize) -> Vec<T>;
-    /// 截取数组
-    ///
-    /// source 原始数组
-    ///
-    /// start 截取起始下标
-    ///
-    /// end 截取终止下标
     fn sub<T: Clone>(source: Vec<T>, start: usize, end: usize) -> Results<Vec<T>>;
-    /// 截取数组
-    ///
-    /// source 原始数组
-    ///
-    /// start 截取起始下标
-    ///
-    /// 持续读取个数
     fn sub_last<T: Clone>(source: Vec<T>, start: usize, last: usize) -> Results<Vec<T>>;
-    /// 拼接数组
+
     fn append<T: Clone>(source: Vec<T>, target: Vec<T>) -> Vec<T>;
-    /// 拼接数组
+
     fn appends<T: Clone>(source: Vec<T>, targets: Vec<Vec<T>>) -> Vec<T>;
-    /// 拼接数组
+
     fn appender<T: Clone>(targets: Vec<Vec<T>>) -> Vec<T>;
-    /// 从可被`eq`整除的bytes长度的字节数组中查找最后不为0的`eq`个字节组成新的数组
+
     fn find_last_eq_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<u8>>;
-    /// 从可被`eq`整除的bytes长度的字节数组中查找所有与`eq`长度相同的不为0的字节数组集合
+
     fn find_eq_vec_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<Vec<u8>>>;
-    /// 创建长度为len且字节均为0x00的字节数组
     fn create_empty_bytes(len: usize) -> Vec<u8>;
-    /// 创建长度为len且内容为空的数组
     fn create_empty<T>(len: usize) -> Vec<T>;
-    /// 检查字节数组是否被填充，即数组中任意字节不为`0x00`
     fn is_fill(bytes: Vec<u8>) -> bool;
-    /// 检查字节数组是否为空或都不为`0x00`
     fn is_empty(bytes: Vec<u8>) -> bool;
-    /// 横向打印数组
     fn print<T>(source: Vec<T>)
         where
             T: Clone,
             T: Display;
 }
 
-impl VectorHandler for Vector {
-    fn modify<T: Clone>(source: Vec<T>, target: Vec<T>, start: usize) -> Vec<T> {
-        vector_modify(source, target, start)
-    }
-    fn sub<T: Clone>(source: Vec<T>, start: usize, end: usize) -> Results<Vec<T>> {
-        vector_sub(source, start, end)
-    }
-    fn sub_last<T: Clone>(source: Vec<T>, start: usize, last: usize) -> Results<Vec<T>> {
-        vector_sub(source, start, start + last)
-    }
+pub trait VectorHandler<T> {
+    /// 检查字节数组是否被填充，即数组中任意字节不为`0x00`
+    fn is_fill(bytes: T) -> bool;
 
-    fn append<T: Clone>(source: Vec<T>, target: Vec<T>) -> Vec<T> {
-        vector_append(source, target)
-    }
+    /// 检查字节数组是否为空或都不为`0x00`
+    fn is_empty(bytes: T) -> bool;
+}
 
-    fn appends<T: Clone>(source: Vec<T>, targets: Vec<Vec<T>>) -> Vec<T> {
-        vector_appends(source, targets)
-    }
-
-    fn appender<T: Clone>(targets: Vec<Vec<T>>) -> Vec<T> {
-        vector_appender(targets)
-    }
-
-    fn find_last_eq_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<u8>> {
-        vector_find_last_eq_bytes(bytes, eq)
-    }
-    fn find_eq_vec_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<Vec<u8>>> {
-        vector_find_eq_vec_bytes(bytes, eq)
-    }
-    fn create_empty_bytes(len: usize) -> Vec<u8> {
-        create_empty_bytes(len)
-    }
-    fn create_empty<T>(len: usize) -> Vec<T> {
-        Vec::with_capacity(len)
-    }
-
+impl VectorHandler<Vec<u8>> for Vector {
     fn is_fill(bytes: Vec<u8>) -> bool {
         let bs_len = bytes.len();
         let mut i = 0;
@@ -127,8 +74,117 @@ impl VectorHandler for Vector {
         }
         true
     }
+}
 
-    fn print<T>(source: Vec<T>)
+impl VectorHandler<&[u8]> for Vector {
+    fn is_fill(bytes: &[u8]) -> bool {
+        let bs_len = bytes.len();
+        let mut i = 0;
+        while i < bs_len {
+            if bytes[i].ne(&0x00) {
+                return true;
+            }
+            i += 1;
+        }
+        false
+    }
+
+    fn is_empty(bytes: &[u8]) -> bool {
+        let bs_len = bytes.len();
+        let mut i = 0;
+        while i < bs_len {
+            if bytes[i].ne(&0x00) {
+                return false;
+            }
+            i += 1;
+        }
+        true
+    }
+}
+
+impl Vector {
+    /// 变更数组内容
+    ///
+    /// * source 原始数组
+    /// * target 变更内容
+    /// * start 起始下标
+    pub fn modify<T: Clone>(source: Vec<T>, target: Vec<T>, start: usize) -> Vec<T> {
+        vector_modify(source, target, start)
+    }
+
+    /// 截取数组
+    ///
+    /// * source 原始数组
+    /// * start 截取起始下标
+    /// * end 截取终止下标
+    pub fn sub<T: Clone>(source: Vec<T>, start: usize, end: usize) -> Results<Vec<T>> {
+        vector_sub(source, start, end)
+    }
+
+    /// 截取数组
+    ///
+    /// * source 原始数组
+    /// * start 截取起始下标
+    /// * end 截取终止下标
+    pub fn sub_u8<T: Clone>(source: &[T], start: usize, end: usize) -> Results<Vec<T>> {
+        vector_sub_4_u8(source, start, end)
+    }
+
+    /// 截取数组
+    ///
+    /// * source 原始数组
+    /// * start 截取起始下标
+    /// * 持续读取个数
+    pub fn sub_last<T: Clone>(source: Vec<T>, start: usize, last: usize) -> Results<Vec<T>> {
+        vector_sub(source, start, start + last)
+    }
+
+    /// 截取数组
+    ///
+    /// * source 原始数组
+    /// * start 截取起始下标
+    /// * 持续读取个数
+    pub fn sub_last_u8<T: Clone>(source: &[T], start: usize, last: usize) -> Results<Vec<T>> {
+        vector_sub_4_u8(source, start, start + last)
+    }
+
+    /// 拼接数组
+    pub fn append<T: Clone>(source: Vec<T>, target: Vec<T>) -> Vec<T> {
+        vector_append(source, target)
+    }
+
+    /// 拼接数组
+    pub fn appends<T: Clone>(source: Vec<T>, targets: Vec<Vec<T>>) -> Vec<T> {
+        vector_appends(source, targets)
+    }
+
+    /// 拼接数组
+    pub fn appender<T: Clone>(targets: Vec<Vec<T>>) -> Vec<T> {
+        vector_appender(targets)
+    }
+
+    /// 从可被`eq`整除的bytes长度的字节数组中查找最后不为0的`eq`个字节组成新的数组
+    pub fn find_last_eq_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<u8>> {
+        vector_find_last_eq_bytes(bytes, eq)
+    }
+
+    /// 从可被`eq`整除的bytes长度的字节数组中查找所有与`eq`长度相同的不为0的字节数组集合
+    pub fn find_eq_vec_bytes(bytes: Vec<u8>, eq: usize) -> Results<Vec<Vec<u8>>> {
+        vector_find_eq_vec_bytes(bytes, eq)
+    }
+
+    /// 创建长度为len且内容为空的数组
+    pub fn create_empty_bytes(len: usize) -> Vec<u8> {
+        Vec::with_capacity(len)
+    }
+
+    /// 创建长度为len且内容为空的数组
+    pub fn create_empty<T>(len: usize) -> Vec<T> {
+        Vec::with_capacity(len)
+    }
+
+    /// 横向打印数组
+    pub fn print<T>(source: Vec<T>)
         where
             T: Clone,
             T: Display,
@@ -174,6 +230,27 @@ fn vector_sub<T: Clone>(source: Vec<T>, start: usize, end: usize) -> Results<Vec
             let _x = s2.split_off(end - start);
         }
         Ok(s2)
+    }
+}
+
+/// 截取数组
+///
+/// source 原始数组
+///
+/// start 截取起始下标
+///
+/// end 截取终止下标，如果为0，则取start之后所有数据
+fn vector_sub_4_u8<T: Clone>(source: &[T], start: usize, end: usize) -> Results<Vec<T>> {
+    let source_len = source.len();
+    if source_len >= end {
+        let mut s1 = source.to_vec();
+        let mut s2 = s1.split_off(start);
+        if end > 0 {
+            let _x = s2.split_off(end - start);
+        }
+        Ok(s2)
+    } else {
+        Err(Errs::str("source array type out of bounds"))
     }
 }
 
@@ -250,16 +327,16 @@ fn vector_find_eq_vec_bytes(mut bytes: Vec<u8>, eq: usize) -> Results<Vec<Vec<u8
     Ok(res)
 }
 
-/// 创建长度为len且字节均为0x00的字节数组
-fn create_empty_bytes(len: usize) -> Vec<u8> {
-    let mut res: Vec<u8> = Vec::with_capacity(len);
-    let mut position = 0;
-    while position < len {
-        res.push(0x00);
-        position += 1
-    }
-    res
-}
+// /// 创建长度为len且字节均为0x00的字节数组
+// fn create_empty_bytes(len: usize) -> Vec<u8> {
+//     let mut res: Vec<u8> = Vec::with_capacity(len);
+//     let mut position = 0;
+//     while position < len {
+//         res.push(0x00);
+//         position += 1
+//     }
+//     res
+// }
 
 /// 拼接数组
 fn vector_append<T: Clone>(source: Vec<T>, target: Vec<T>) -> Vec<T> {
@@ -312,7 +389,6 @@ fn vector_print<T>(source: Vec<T>)
 #[cfg(test)]
 mod vectors_test {
     use crate::vectors::Vector;
-    use crate::vectors::VectorHandler;
 
     #[test]
     fn modify_test() {

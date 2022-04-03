@@ -21,7 +21,6 @@ use crate::errors::{Errs, Results};
 use crate::io::dir::Dir;
 use crate::io::dir::DirHandler;
 use crate::vectors::Vector;
-use crate::vectors::VectorHandler;
 
 pub struct Filer;
 
@@ -1011,8 +1010,7 @@ fn rename<P: AsRef<Path>>(from: P, to: P) -> Results<()> {
 mod file_test {
     use crate::io::file::{FilerHandler, FilerNormal, FilerReader, FilerWriter};
     use crate::io::file::Filer;
-    use crate::vectors::Vector;
-    use crate::vectors::VectorHandler;
+    use crate::vectors::{Vector, VectorHandler};
 
     #[test]
     fn create_file_test() {
