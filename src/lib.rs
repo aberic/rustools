@@ -22,6 +22,7 @@ pub use env::Env;
 pub use rands::Rand;
 pub use time::Time;
 pub use trans::Trans;
+pub use trans::TransHandler;
 use crate::errors::{Errs, Results};
 
 pub mod concurrent;
