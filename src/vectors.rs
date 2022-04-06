@@ -149,9 +149,15 @@ impl Vector {
         vector_find_eq_vec_bytes(bytes, eq)
     }
 
-    /// 创建长度为len且内容为空的数组
+    /// 创建长度为len且字节均为0x00的字节数组
     pub fn create_empty_bytes(len: usize) -> Vec<u8> {
-        Vec::with_capacity(len)
+        let mut res: Vec<u8> = Vec::with_capacity(len);
+        let mut position = 0;
+        while position < len {
+            res.push(0x00);
+            position += 1
+        }
+        res
     }
 
     /// 创建长度为len且内容为空的数组
