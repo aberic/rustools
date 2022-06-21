@@ -42,7 +42,7 @@ pub trait YamlHandler {
     }
 
     fn to_vec(&self) -> Vec<u8> {
-        serde_yaml::to_string(&self.value()).unwrap().into_bytes()
+        serde_yaml::to_vec(&self.value()).unwrap()
     }
 
     fn to_object<Object>(&self) -> Results<Object>
@@ -733,6 +733,7 @@ fn from_string(data: &str) -> Results<Value> {
 #[cfg(test)]
 mod yaml_test {
     use serde::{Deserialize, Serialize};
+    use serde_yaml::Value;
 
     use crate::yaml::{YamlExec, YamlGet, YamlHandler, YamlNew};
     use crate::yaml::{Yaml, YamlArray};
@@ -1145,9 +1146,12 @@ mod yaml_test {
         println!("array3 to string = {}", array3.to_string());
         println!("array4 to string = {}", array4.to_string());
         println!(
-            "array1 to slice = {:#?}",
+            "array1 to slice1 = {:#?}",
             String::from_utf8(array1.to_vec())
-        )
+        );
+        let value:Value = serde_yaml::from_slice(array1.to_vec().as_slice()).unwrap();
+        let array1_1 = Yaml::new(value).unwrap();
+        println!("array1_1 to string = {}", array1_1.to_string());
     }
 
     #[test]

@@ -1052,7 +1052,7 @@ fn generate_x509(
             //         .build(&cert_builder.x509v3_context(Some(x509.as_ref()), None))?,
             // )?;
             let auth_key_identifier = AuthorityKeyIdentifier::new() // 授权密钥标识符
-                .keyid(true)
+                // .keyid(true) // todo 为true则报错
                 .issuer(true)
                 .build(&cert_builder.x509v3_context(Some(x509.as_ref()), None))?;
             cert_builder.append_extension(auth_key_identifier)?;

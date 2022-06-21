@@ -38,11 +38,11 @@ pub trait JsonHandler {
     fn value(&self) -> Value;
 
     fn to_string(&self) -> String {
-        self.value().to_string()
+        serde_json::to_string(&self.value()).unwrap()
     }
 
     fn to_vec(&self) -> Vec<u8> {
-        self.value().to_string().into_bytes()
+        serde_json::to_vec(&self.value()).unwrap()
     }
 
     fn to_object<Object>(&self) -> Results<Object>
