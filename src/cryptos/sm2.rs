@@ -36,13 +36,13 @@ pub struct SM2 {
 
 pub trait SkNew {
     /// 生成非对称加密私钥，返回sk字节数组
-    fn generate() -> Vec<u8>;
+    fn generate() -> Results<Vec<u8>>;
 
     /// 生成非对称加密私钥，返回sk字符串
-    fn generate_hex() -> String;
+    fn generate_hex() -> Results<String>;
 
     /// 生成非对称加密私钥，返回sk字符串
-    fn generate_base64() -> String;
+    fn generate_base64() -> Results<String>;
 }
 
 pub trait SkNewStore {
@@ -64,13 +64,13 @@ pub trait SkNewStore {
 
 pub trait SKNew {
     /// 生成非对称加密公私钥，返回sk、pk字节数组
-    fn generate() -> (Vec<u8>, Vec<u8>);
+    fn generate() -> Results<(Vec<u8>, Vec<u8>)>;
 
     /// 生成非对称加密公私钥，返回sk、pk字符串
-    fn generate_hex() -> (String, String);
+    fn generate_hex() -> Results<(String, String)>;
 
     /// 生成非对称加密公私钥，返回sk、pk字符串
-    fn generate_base64() -> (String, String);
+    fn generate_base64() -> Results<(String, String)>;
 }
 
 pub trait SKNewStore {
@@ -192,37 +192,54 @@ pub trait SKVerifyPath<M, N> {
 
 impl SM2 {
     /// 生成非对称加密公私钥
-    pub fn new() -> SM2 {
-        let ctx = SigCtx::new();
-        let (pk, sk) = ctx.new_keypair();
-        SM2 { ctx, sk, pk }
+    pub fn new() -> Results<SM2> {
+        let (ctx, pk, sk) = new_keypair()?;
+        Ok(SM2 { ctx, sk, pk })
     }
 
-    pub fn new_pk(&self) -> Vec<u8> {
-        self.ctx
-            .serialize_pubkey(&self.ctx.pk_from_sk(&self.sk), true)
+    pub fn new_pk(&self) -> Results<Vec<u8>> {
+        match self.ctx.pk_from_sk(&self.sk) {
+            Ok(p) => match self.ctx.serialize_pubkey(&p, true) {
+                Ok(src) => Ok(src),
+                Err(err) => Err(Errs::strs("new sm2 in serialize_pubkey failed!", err)),
+            },
+            Err(err) => Err(Errs::strs("new sm2 pk_from_sk failed!", err)),
+        }
     }
-    pub fn sk_bytes(&self) -> Vec<u8> {
-        self.ctx.serialize_seckey(&self.sk)
-    }
-
-    pub fn pk_bytes(&self) -> Vec<u8> {
-        self.ctx.serialize_pubkey(&self.pk, true)
-    }
-
-    pub fn sig(&self, msg: &[u8]) -> Vec<u8> {
-        let sig = self.ctx.sign(msg, &self.sk, &self.pk);
-        sig.der_encode()
-    }
-
-    pub fn sig_hex(&self, msg: &[u8]) -> String {
-        let sig = self.ctx.sign(msg, &self.sk, &self.pk);
-        Hex::encode(sig.der_encode())
+    pub fn sk_bytes(&self) -> Results<Vec<u8>> {
+        match self.ctx.serialize_seckey(&self.sk) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm2 sk_bytes failed!", err)),
+        }
     }
 
-    pub fn sig_base64(&self, msg: &[u8]) -> String {
-        let sig = self.ctx.sign(msg, &self.sk, &self.pk);
-        Base64::encode(sig.der_encode())
+    pub fn pk_bytes(&self) -> Results<Vec<u8>> {
+        match self.ctx.serialize_pubkey(&self.pk, true) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm2 pk_bytes failed!", err)),
+        }
+    }
+
+    fn signature(&self, msg: &[u8], pk_point: &Point) -> Results<Signature> {
+        match self.ctx.sign(msg, &self.sk, pk_point) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm2 sig failed!", err)),
+        }
+    }
+
+    pub fn sig(&self, msg: &[u8]) -> Results<Vec<u8>> {
+        let sig = self.signature(msg, &self.pk)?;
+        Ok(sig.der_encode())
+    }
+
+    pub fn sig_hex(&self, msg: &[u8]) -> Results<String> {
+        let sig = self.signature(msg, &self.pk)?;
+        Ok(Hex::encode(sig.der_encode()))
+    }
+
+    pub fn sig_base64(&self, msg: &[u8]) -> Results<String> {
+        let sig = self.signature(msg, &self.pk)?;
+        Ok(Base64::encode(sig.der_encode()))
     }
 
     pub fn sig_pk(&self, msg: &[u8], pk: &[u8]) -> Results<Vec<u8>> {
@@ -231,47 +248,47 @@ impl SM2 {
             Ok(pp) => pk_point = pp,
             Err(err) => return Err(Errs::string(format!("load pub key error! {:#?}", err))),
         }
-        let sig = self.ctx.sign(msg, &self.sk, &pk_point);
+        let sig = self.signature(msg, &pk_point)?;
         Ok(sig.der_encode())
     }
 
     pub fn verifies(&self, msg: &[u8], der: &[u8]) -> Results<bool> {
-        let sig: Signature;
         match Signature::der_decode(der) {
-            Ok(s) => sig = s,
-            Err(err) => return Err(Errs::strs("der decode", err)),
+            Ok(sig) => match self.ctx.verify(msg, &self.pk, &sig) {
+                Ok(src) => Ok(src),
+                Err(err) => return Err(Errs::strs("sm2 verifies verify failed!", err)),
+            },
+            Err(err) => return Err(Errs::strs("sm2 verifies der decode", err)),
         }
-        Ok(self.ctx.verify(msg, &self.pk, &sig))
     }
 
     pub fn verifies_pk(&self, msg: &[u8], der: &[u8], pk: &[u8]) -> Results<bool> {
-        let pk_point: Point;
-        let sig: Signature;
         match self.ctx.load_pubkey(pk) {
-            Ok(pp) => pk_point = pp,
+            Ok(pk_point) => match Signature::der_decode(der) {
+                Ok(sig) => match self.ctx.verify(msg, &pk_point, &sig) {
+                    Ok(src) => Ok(src),
+                    Err(err) => return Err(Errs::strs("der decode", err)),
+                },
+                Err(err) => return Err(Errs::strs("der decode", err)),
+            },
             Err(err) => return Err(Errs::string(format!("load pub key error! {:#?}", err))),
         }
-        match Signature::der_decode(der) {
-            Ok(s) => sig = s,
-            Err(err) => return Err(Errs::strs("der decode", err)),
-        }
-        Ok(self.ctx.verify(msg, &pk_point, &sig))
     }
 }
 
 ////////// sm generate start //////////
 
 impl SkNew for SM2 {
-    fn generate() -> Vec<u8> {
+    fn generate() -> Results<Vec<u8>> {
         generate_sk()
     }
 
-    fn generate_hex() -> String {
-        Hex::encode(generate_sk())
+    fn generate_hex() -> Results<String> {
+        Ok(Hex::encode(generate_sk()?))
     }
 
-    fn generate_base64() -> String {
-        Base64::encode(generate_sk())
+    fn generate_base64() -> Results<String> {
+        Ok(Base64::encode(generate_sk()?))
     }
 }
 
@@ -290,15 +307,15 @@ impl SkNewStore for SM2 {
 }
 
 impl SKNew for SM2 {
-    fn generate() -> (Vec<u8>, Vec<u8>) {
+    fn generate() -> Results<(Vec<u8>, Vec<u8>)> {
         generate()
     }
 
-    fn generate_hex() -> (String, String) {
+    fn generate_hex() -> Results<(String, String)> {
         generate_hex()
     }
 
-    fn generate_base64() -> (String, String) {
+    fn generate_base64() -> Results<(String, String)> {
         generate_base64()
     }
 }
@@ -385,8 +402,8 @@ impl SKStoreKey<Vec<u8>> for SM2 {
 
 impl SKStore for SM2 {
     fn store<P: AsRef<Path>>(&self, sk_filepath: P, pk_filepath: P) -> Results<()> {
-        store_key(Base64::encode(self.sk_bytes()), sk_filepath)?;
-        store_key(Base64::encode(self.pk_bytes()), pk_filepath)
+        store_key(Base64::encode(self.sk_bytes().unwrap()), sk_filepath)?;
+        store_key(Base64::encode(self.pk_bytes().unwrap()), pk_filepath)
     }
 }
 
@@ -1595,33 +1612,54 @@ fn load_key_from_file<P: AsRef<Path>>(key_filepath: P) -> Results<Vec<u8>> {
     }
 }
 
-fn generate() -> (Vec<u8>, Vec<u8>) {
+fn new_keypair() -> Results<(SigCtx, Point, BigUint)> {
     let ctx = SigCtx::new();
-    let (pk, sk) = ctx.new_keypair();
-    (ctx.serialize_seckey(&sk), ctx.serialize_pubkey(&pk, true))
+    match ctx.new_keypair() {
+        Ok((pk, sk)) => Ok((ctx, pk, sk)),
+        Err(err) => Err(Errs::strs("sm2 new_keypair failed!", err)),
+    }
 }
 
-fn generate_hex() -> (String, String) {
-    let (sk, pk) = generate();
-    (Hex::encode(sk), Hex::encode(pk))
+fn generate() -> Results<(Vec<u8>, Vec<u8>)> {
+    let (ctx, pk, sk) = new_keypair()?;
+    match ctx.serialize_seckey(&sk) {
+        Ok(seckey) => match ctx.serialize_pubkey(&pk, true) {
+            Ok(pubkey) => Ok((seckey, pubkey)),
+            Err(err) => Err(Errs::strs("sm2 generate serialize_pubkey failed!", err)),
+        },
+        Err(err) => Err(Errs::strs("sm2 generate serialize_seckey failed!", err)),
+    }
 }
 
-fn generate_base64() -> (String, String) {
-    let (sk, pk) = generate();
-    (Base64::encode(sk), Base64::encode(pk))
+fn generate_hex() -> Results<(String, String)> {
+    let (sk, pk) = generate()?;
+    Ok((Hex::encode(sk), Hex::encode(pk)))
 }
 
-fn generate_sk() -> Vec<u8> {
-    let ctx = SigCtx::new();
-    let (_pk, sk) = ctx.new_keypair();
-    ctx.serialize_seckey(&sk)
+fn generate_base64() -> Results<(String, String)> {
+    let (sk, pk) = generate()?;
+    Ok((Base64::encode(sk), Base64::encode(pk)))
+}
+
+fn generate_sk() -> Results<Vec<u8>> {
+    let (ctx, _pk, sk) = new_keypair()?;
+    match ctx.serialize_seckey(&sk) {
+        Ok(src) => Ok(src),
+        Err(err) => Err(Errs::strs("sm2 generate_sk serialize_seckey failed!", err)),
+    }
 }
 
 fn generate_pk_from_sk(sk: Vec<u8>) -> Results<Vec<u8>> {
     let ctx = SigCtx::new();
     match ctx.load_seckey(sk.as_slice()) {
-        Ok(p) => Ok(ctx.serialize_pubkey(&ctx.pk_from_sk(&p), true)),
-        Err(err) => Err(Errs::string(format!("unknown {:#?}", err))),
+        Ok(sk) => match ctx.pk_from_sk(&sk) {
+            Ok(pk) => match ctx.serialize_pubkey(&pk, true) {
+                Ok(src) => Ok(src),
+                Err(err) => Err(Errs::strs("sm2 generate_pk_from_sk serialize_pubkey", err)),
+            }
+            Err(err) => Err(Errs::strs("sm2 generate_pk_from_sk pk_from_sk", err)),
+        },
+        Err(err) => Err(Errs::strs("sm2 generate_pk_from_sk load_seckey", err)),
     }
 }
 
@@ -1651,7 +1689,7 @@ fn generate_in_file<P: AsRef<Path>>(
     sk_filepath: P,
     pk_filepath: P,
 ) -> Results<(Vec<u8>, Vec<u8>)> {
-    let (sk_bytes, pk_bytes) = generate();
+    let (sk_bytes, pk_bytes) = generate()?;
     store_base64_bytes_key(sk_bytes.clone(), sk_filepath)?;
     store_base64_bytes_key(pk_bytes.clone(), pk_filepath)?;
     Ok((sk_bytes, pk_bytes))
@@ -1661,7 +1699,7 @@ fn generate_hex_in_file<P: AsRef<Path>>(
     sk_filepath: P,
     pk_filepath: P,
 ) -> Results<(String, String)> {
-    let (sk_str, pk_str) = generate_hex();
+    let (sk_str, pk_str) = generate_hex()?;
     store_key(sk_str.clone(), sk_filepath)?;
     store_key(pk_str.clone(), pk_filepath)?;
     Ok((sk_str, pk_str))
@@ -1671,58 +1709,60 @@ fn generate_base64_in_file<P: AsRef<Path>>(
     sk_filepath: P,
     pk_filepath: P,
 ) -> Results<(String, String)> {
-    let (sk_str, pk_str) = generate_base64();
+    let (sk_str, pk_str) = generate_base64()?;
     store_key(sk_str.clone(), sk_filepath)?;
     store_key(pk_str.clone(), pk_filepath)?;
     Ok((sk_str, pk_str))
 }
 
 fn generate_sk_in_file<P: AsRef<Path>>(sk_filepath: P) -> Results<Vec<u8>> {
-    let (sk_bytes, _pk_bytes) = generate();
+    let (sk_bytes, _pk_bytes) = generate()?;
     store_base64_bytes_key(sk_bytes.clone(), sk_filepath)?;
     Ok(sk_bytes)
 }
 
 fn generate_sk_hex_in_file<P: AsRef<Path>>(sk_filepath: P) -> Results<String> {
-    let (sk_str, _pk_str) = generate_hex();
+    let (sk_str, _pk_str) = generate_hex()?;
     store_key(sk_str.clone(), sk_filepath)?;
     Ok(sk_str)
 }
 
 fn generate_sk_base64_in_file<P: AsRef<Path>>(sk_filepath: P) -> Results<String> {
-    let (sk_str, _pk_str) = generate_base64();
+    let (sk_str, _pk_str) = generate_base64()?;
     store_key(sk_str.clone(), sk_filepath)?;
     Ok(sk_str)
 }
 
 fn sign(msg: &[u8], sk: &[u8], pk: &[u8]) -> Results<Vec<u8>> {
     let ctx = SigCtx::new();
-    let pk_point: Point;
-    let sig: Signature;
-    match ctx.load_pubkey(pk) {
-        Ok(pp) => pk_point = pp,
-        Err(err) => return Err(Errs::string(format!("load pub key error! {:#?}", err))),
-    }
-    match ctx.load_seckey(sk) {
-        Ok(sk_bu) => sig = ctx.sign(msg, &sk_bu, &pk_point),
-        Err(err) => return Err(Errs::string(format!("load pub key error! {:#?}", err))),
-    }
+    let pk_point = match ctx.load_pubkey(pk) {
+        Ok(pp) => pp,
+        Err(err) => return Err(Errs::strs("sm2 sign load_pubkey failed!", err)),
+    };
+    let sig = match ctx.load_seckey(sk) {
+        Ok(sk_bu) => match ctx.sign(msg, &sk_bu, &pk_point) {
+            Ok(src) => src,
+            Err(err) => return Err(Errs::strs("sm2 sign load_seckey sign failed!", err)),
+        },
+        Err(err) => return Err(Errs::strs("sm2 sign load_seckey failed!", err)),
+    };
     Ok(sig.der_encode())
 }
 
 fn verify(msg: &[u8], pk: &[u8], der: &[u8]) -> Results<bool> {
     let ctx = SigCtx::new();
-    let pk_point: Point;
-    let sig: Signature;
-    match ctx.load_pubkey(pk) {
-        Ok(pp) => pk_point = pp,
-        Err(err) => return Err(Errs::string(format!("load pub key error! {:#?}", err))),
+    let pk_point = match ctx.load_pubkey(pk) {
+        Ok(pp) => pp,
+        Err(err) => return Err(Errs::strs("sm2 verify load_pubkey failed!", err)),
+    };
+    let sig = match Signature::der_decode(der) {
+        Ok(s) => s,
+        Err(err) => return Err(Errs::strs("sm2 verify der_decode failed!", err)),
+    };
+    match ctx.verify(msg, &pk_point, &sig) {
+        Ok(src) => Ok(src),
+        Err(err) => Err(Errs::strs("sm2 verify verify failed!", err)),
     }
-    match Signature::der_decode(der) {
-        Ok(s) => sig = s,
-        Err(err) => return Err(Errs::strs("der decode", err)),
-    }
-    Ok(ctx.verify(msg, &pk_point, &sig))
 }
 
 
@@ -1739,17 +1779,17 @@ mod sm2_test {
 
         #[test]
         fn test() {
-            let sm2 = SM2::new();
-            println!("sk0 base64 = {}", Base64::encode(sm2.sk_bytes()));
-            println!("pk0 base64 = {}", Base64::encode(sm2.pk_bytes()));
-            println!("sk0 hex = {}", Hex::encode(sm2.sk_bytes()));
-            println!("pk0 hex = {}", Hex::encode(sm2.pk_bytes()));
-            let pk1 = sm2.new_pk();
+            let sm2 = SM2::new().unwrap();
+            println!("sk0 base64 = {}", Base64::encode(sm2.sk_bytes().unwrap()));
+            println!("pk0 base64 = {}", Base64::encode(sm2.pk_bytes().unwrap()));
+            println!("sk0 hex = {}", Hex::encode(sm2.sk_bytes().unwrap()));
+            println!("pk0 hex = {}", Hex::encode(sm2.pk_bytes().unwrap()));
+            let pk1 = sm2.new_pk().unwrap();
             println!("pk1 base64 = {}", Base64::encode(pk1.clone()));
             println!("pk1 hex = {}", Hex::encode(pk1.clone()));
 
             let res1 = "hello world!".as_bytes();
-            let sign_res = sm2.sig(res1);
+            let sign_res = sm2.sig(res1).unwrap();
             println!(
                 "verify = {}",
                 sm2.verifies(res1, sign_res.as_slice()).unwrap()
@@ -1787,13 +1827,13 @@ mod sm2_test {
 
         #[test]
         fn test() {
-            let (sk, pk) = SM2::generate();
+            let (sk, pk) = SM2::generate().unwrap();
             println!("sk = {}\npk = {}", Base64::encode(sk), Base64::encode(pk));
-            let (sk, pk) = SM2::generate();
+            let (sk, pk) = SM2::generate().unwrap();
             println!("sk = {}\npk = {}", Base64::encode(sk), Base64::encode(pk));
-            let (sk, pk) = SM2::generate_base64();
+            let (sk, pk) = SM2::generate_base64().unwrap();
             println!("sk = {}\npk = {}", sk, pk);
-            let (sk, pk) = SM2::generate_base64();
+            let (sk, pk) = SM2::generate_base64().unwrap();
             println!("sk = {}\npk = {}", sk, pk);
         }
     }
@@ -1807,13 +1847,13 @@ mod sm2_test {
 
         #[test]
         fn test() {
-            let sk = SM2::generate();
+            let sk = SM2::generate().unwrap();
             println!("sk = {}", Base64::encode(sk));
-            let sk = SM2::generate();
+            let sk = SM2::generate().unwrap();
             println!("sk = {}", Base64::encode(sk));
-            let sk = SM2::generate_base64();
+            let sk = SM2::generate_base64().unwrap();
             println!("sk = {}", sk);
-            let sk = SM2::generate_base64();
+            let sk = SM2::generate_base64().unwrap();
             println!("sk = {}", sk);
         }
     }
@@ -1891,7 +1931,7 @@ mod sm2_test {
 
         #[test]
         fn generate_pk_test() {
-            let (sk, pk) = SM2::generate();
+            let (sk, pk) = SM2::generate().unwrap();
             let pk_new = SM2::generate_pk(sk.clone()).unwrap();
             println!(
                 "sk = {}\npk = {}\nne = {}",
@@ -1900,7 +1940,7 @@ mod sm2_test {
                 Base64::encode(pk_new)
             );
 
-            let (sk, pk) = SM2::generate_base64();
+            let (sk, pk) = SM2::generate_base64().unwrap();
             let pk_new = SM2::generate_pk_by_base64(sk.clone()).unwrap();
             println!("sk = {}\npk = {}\nne = {}", sk, pk, Base64::encode(pk_new));
         }
@@ -1915,7 +1955,7 @@ mod sm2_test {
 
         #[test]
         fn generate_pk_test() {
-            let (sk, pk) = SM2::generate();
+            let (sk, pk) = SM2::generate().unwrap();
             let pk_new = SM2::generate_pk(sk.clone()).unwrap();
             println!(
                 "sk = {}\npk = {}\nne = {}",
@@ -1924,7 +1964,7 @@ mod sm2_test {
                 Base64::encode(pk_new)
             );
 
-            let (sk, pk) = SM2::generate_base64();
+            let (sk, pk) = SM2::generate_base64().unwrap();
             let pk_new = SM2::generate_pk_by_base64(sk.clone()).unwrap();
             println!("sk = {}\npk = {}\nne = {}", sk, pk, Base64::encode(pk_new));
         }
@@ -3544,17 +3584,17 @@ mod sm2_test {
             let msg = string.as_bytes();
 
             let ctx = SigCtx::new();
-            let (pk, sk) = ctx.new_keypair();
+            let (pk, sk) = ctx.new_keypair().unwrap();
 
-            let signature = ctx.sign(msg, &sk, &pk);
+            let signature = ctx.sign(msg, &sk, &pk).unwrap();
             let der = signature.der_encode();
             let sig = Signature::der_decode(&der[..]).unwrap();
-            assert!(ctx.verify(msg, &pk, &sig));
+            assert!(ctx.verify(msg, &pk, &sig).unwrap());
 
-            let signature = ctx.sign(msg, &sk, &pk);
+            let signature = ctx.sign(msg, &sk, &pk).unwrap();
             let der = signature.der_encode();
             let sig = Signature::der_decode_raw(&der[2..]).unwrap();
-            assert!(ctx.verify(msg, &pk, &sig));
+            assert!(ctx.verify(msg, &pk, &sig).unwrap());
         }
     }
 }

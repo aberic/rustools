@@ -16,6 +16,7 @@ use libsm::sm4::Cipher;
 use libsm::sm4::cipher_mode::CipherMode;
 use rand::RngCore;
 use rand::rngs::OsRng;
+use crate::errors::{Errs, Results};
 
 pub struct SM4 {
     key: [u8; 16],
@@ -28,19 +29,19 @@ pub trait SM4Handler {
 }
 
 pub trait SM4New1 {
-    fn new() -> SM4;
+    fn new() -> Results<SM4>;
 }
 
 pub trait SM4New2 {
-    fn new(mode: CipherMode) -> SM4;
+    fn new(mode: CipherMode) -> Results<SM4>;
 }
 
 pub trait SM4New3 {
-    fn new(key: [u8; 16], mode: CipherMode) -> SM4;
+    fn new(key: [u8; 16], mode: CipherMode) -> Results<SM4>;
 }
 
 pub trait SM4New4 {
-    fn new(key: [u8; 16], iv: [u8; 16], mode: CipherMode) -> SM4;
+    fn new(key: [u8; 16], iv: [u8; 16], mode: CipherMode) -> Results<SM4>;
 }
 
 pub trait SM4SelfHandler {
@@ -50,27 +51,27 @@ pub trait SM4SelfHandler {
 }
 
 pub trait SM4Crypt {
-    fn encrypt(key: [u8; 16], iv: [u8; 16], data: &[u8]) -> Vec<u8>;
+    fn encrypt(key: [u8; 16], iv: [u8; 16], data: &[u8]) -> Results<Vec<u8>>;
 
-    fn decrypt(key: [u8; 16], iv: [u8; 16], data: &[u8]) -> Vec<u8>;
+    fn decrypt(key: [u8; 16], iv: [u8; 16], data: &[u8]) -> Results<Vec<u8>>;
 }
 
 pub trait SM4CryptMode {
-    fn encrypt(key: [u8; 16], iv: [u8; 16], data: &[u8], mode: CipherMode) -> Vec<u8>;
+    fn encrypt(key: [u8; 16], iv: [u8; 16], data: &[u8], mode: CipherMode) -> Results<Vec<u8>>;
 
-    fn decrypt(key: [u8; 16], iv: [u8; 16], data: &[u8], mode: CipherMode) -> Vec<u8>;
+    fn decrypt(key: [u8; 16], iv: [u8; 16], data: &[u8], mode: CipherMode) -> Results<Vec<u8>>;
 }
 
 pub trait SM4SelfCrypt1 {
-    fn encrypt(&self, data: &[u8]) -> Vec<u8>;
+    fn encrypt(&self, data: &[u8]) -> Results<Vec<u8>>;
 
-    fn decrypt(&self, data: &[u8]) -> Vec<u8>;
+    fn decrypt(&self, data: &[u8]) -> Results<Vec<u8>>;
 }
 
 pub trait SM4SelfCrypt2 {
-    fn encrypt(&self, iv: &[u8; 16], data: &[u8]) -> Vec<u8>;
+    fn encrypt(&self, iv: &[u8; 16], data: &[u8]) -> Results<Vec<u8>>;
 
-    fn decrypt(&self, iv: &[u8; 16], data: &[u8]) -> Vec<u8>;
+    fn decrypt(&self, iv: &[u8; 16], data: &[u8]) -> Results<Vec<u8>>;
 }
 
 impl SM4Handler for SM4 {
@@ -80,25 +81,25 @@ impl SM4Handler for SM4 {
 }
 
 impl SM4New1 for SM4 {
-    fn new() -> SM4 {
+    fn new() -> Results<SM4> {
         create_sm4(rand_block(), rand_block(), CipherMode::Cfb)
     }
 }
 
 impl SM4New2 for SM4 {
-    fn new(mode: CipherMode) -> SM4 {
+    fn new(mode: CipherMode) -> Results<SM4> {
         create_sm4(rand_block(), rand_block(), mode)
     }
 }
 
 impl SM4New3 for SM4 {
-    fn new(key: [u8; 16], mode: CipherMode) -> SM4 {
+    fn new(key: [u8; 16], mode: CipherMode) -> Results<SM4> {
         create_sm4(key, rand_block(), mode)
     }
 }
 
 impl SM4New4 for SM4 {
-    fn new(key: [u8; 16], iv: [u8; 16], mode: CipherMode) -> SM4 {
+    fn new(key: [u8; 16], iv: [u8; 16], mode: CipherMode) -> Results<SM4> {
         create_sm4(key, iv, mode)
     }
 }
@@ -114,55 +115,80 @@ impl SM4SelfHandler for SM4 {
 }
 
 impl SM4SelfCrypt1 for SM4 {
-    fn encrypt(&self, data: &[u8]) -> Vec<u8> {
-        self.sm4_cipher_mode.encrypt(data, &self.iv)
+    fn encrypt(&self, data: &[u8]) -> Results<Vec<u8>> {
+        match self.sm4_cipher_mode.encrypt(data, &self.iv) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm4 encrypt failed!", err)),
+        }
     }
 
-    fn decrypt(&self, data: &[u8]) -> Vec<u8> {
-        self.sm4_cipher_mode.decrypt(data, &self.iv)
+    fn decrypt(&self, data: &[u8]) -> Results<Vec<u8>> {
+        match self.sm4_cipher_mode.decrypt(data, &self.iv) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm4 decrypt failed!", err)),
+        }
     }
 }
 
 impl SM4SelfCrypt2 for SM4 {
-    fn encrypt(&self, iv: &[u8; 16], data: &[u8]) -> Vec<u8> {
-        self.sm4_cipher_mode.encrypt(data, iv)
+    fn encrypt(&self, iv: &[u8; 16], data: &[u8]) -> Results<Vec<u8>> {
+        match self.sm4_cipher_mode.encrypt(data, iv) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm4 encrypt failed!", err)),
+        }
     }
 
-    fn decrypt(&self, iv: &[u8; 16], data: &[u8]) -> Vec<u8> {
-        self.sm4_cipher_mode.decrypt(data, iv)
+    fn decrypt(&self, iv: &[u8; 16], data: &[u8]) -> Results<Vec<u8>> {
+        match self.sm4_cipher_mode.decrypt(data, iv) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm4 decrypt failed!", err)),
+        }
     }
 }
 
 impl SM4Crypt for SM4 {
-    fn encrypt(key: [u8; 16], iv: [u8; 16], data: &[u8]) -> Vec<u8> {
-        create_sm4(key, iv, CipherMode::Cfb)
-            .sm4_cipher_mode
-            .encrypt(data, &iv)
+    fn encrypt(key: [u8; 16], iv: [u8; 16], data: &[u8]) -> Results<Vec<u8>> {
+        match create_sm4(key, iv, CipherMode::Cfb)?.sm4_cipher_mode.encrypt(data, &iv) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm4 encrypt failed!", err)),
+        }
+
     }
 
-    fn decrypt(key: [u8; 16], iv: [u8; 16], data: &[u8]) -> Vec<u8> {
-        create_sm4(key, iv, CipherMode::Cfb)
-            .sm4_cipher_mode
-            .decrypt(data, &iv)
+    fn decrypt(key: [u8; 16], iv: [u8; 16], data: &[u8]) -> Results<Vec<u8>> {
+        match create_sm4(key, iv, CipherMode::Cfb)?.sm4_cipher_mode.decrypt(data, &iv) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm4 decrypt failed!", err)),
+        }
+
     }
 }
 
 impl SM4CryptMode for SM4 {
-    fn encrypt(key: [u8; 16], iv: [u8; 16], data: &[u8], mode: CipherMode) -> Vec<u8> {
-        create_sm4(key, iv, mode).sm4_cipher_mode.encrypt(data, &iv)
+    fn encrypt(key: [u8; 16], iv: [u8; 16], data: &[u8], mode: CipherMode) -> Results<Vec<u8>> {
+        match create_sm4(key, iv, mode)?.sm4_cipher_mode.encrypt(data, &iv) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm4 encrypt failed!", err)),
+        }
     }
 
-    fn decrypt(key: [u8; 16], iv: [u8; 16], data: &[u8], mode: CipherMode) -> Vec<u8> {
-        create_sm4(key, iv, mode).sm4_cipher_mode.decrypt(data, &iv)
+    fn decrypt(key: [u8; 16], iv: [u8; 16], data: &[u8], mode: CipherMode) -> Results<Vec<u8>> {
+        match create_sm4(key, iv, mode)?.sm4_cipher_mode.decrypt(data, &iv) {
+            Ok(src) => Ok(src),
+            Err(err) => Err(Errs::strs("sm4 decrypt failed!", err)),
+        }
     }
 }
 
-fn create_sm4(key: [u8; 16], iv: [u8; 16], mode: CipherMode) -> SM4 {
-    SM4 {
+fn create_sm4(key: [u8; 16], iv: [u8; 16], mode: CipherMode) -> Results<SM4> {
+    Ok(SM4 {
         key,
         iv,
-        sm4_cipher_mode: Cipher::new(&key, mode),
-    }
+        sm4_cipher_mode: match Cipher::new(&key, mode) {
+            Ok(src) => src,
+            Err(err) => return Err(Errs::strs("sm4 create_sm4 failed!", err)),
+        },
+    })
 }
 
 fn rand_block() -> [u8; 16] {
@@ -183,8 +209,8 @@ mod sm4_test {
         fn sm4_test1() {
             let key = SM4::rand_block();
             let iv = SM4::rand_block();
-            let res = SM4::encrypt(key, iv, "test".as_bytes());
-            let d_res = SM4::decrypt(key, iv, res.as_slice());
+            let res = SM4::encrypt(key, iv, "test".as_bytes()).unwrap();
+            let d_res = SM4::decrypt(key, iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -200,8 +226,8 @@ mod sm4_test {
         fn sm4_test2() {
             let key = SM4::rand_block();
             let iv = SM4::rand_block();
-            let res = SM4::encrypt(key, iv, "test".as_bytes(), CipherMode::Cfb);
-            let d_res = SM4::decrypt(key, iv, res.as_slice(), CipherMode::Cfb);
+            let res = SM4::encrypt(key, iv, "test".as_bytes(), CipherMode::Cfb).unwrap();
+            let d_res = SM4::decrypt(key, iv, res.as_slice(), CipherMode::Cfb).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -213,9 +239,9 @@ mod sm4_test {
 
         #[test]
         fn sm4_test1() {
-            let sm4 = SM4::new();
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new().unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -227,10 +253,10 @@ mod sm4_test {
 
         #[test]
         fn sm4_test1() {
-            let sm4 = SM4::new();
+            let sm4 = SM4::new().unwrap();
             let iv = SM4::rand_block();
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -244,25 +270,25 @@ mod sm4_test {
 
         #[test]
         fn sm4_test1() {
-            let sm4 = SM4::new(CipherMode::Cfb);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(CipherMode::Cfb).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
         #[test]
         fn sm4_test2() {
-            let sm4 = SM4::new(CipherMode::Ctr);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(CipherMode::Ctr).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
         #[test]
         fn sm4_test3() {
-            let sm4 = SM4::new(CipherMode::Ofb);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(CipherMode::Ofb).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -276,28 +302,28 @@ mod sm4_test {
 
         #[test]
         fn sm4_test1() {
-            let sm4 = SM4::new(CipherMode::Cfb);
+            let sm4 = SM4::new(CipherMode::Cfb).unwrap();
             let iv = SM4::rand_block();
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
         #[test]
         fn sm4_test2() {
-            let sm4 = SM4::new(CipherMode::Ctr);
+            let sm4 = SM4::new(CipherMode::Ctr).unwrap();
             let iv = SM4::rand_block();
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
         #[test]
         fn sm4_test3() {
-            let sm4 = SM4::new(CipherMode::Ofb);
+            let sm4 = SM4::new(CipherMode::Ofb).unwrap();
             let iv = SM4::rand_block();
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -312,27 +338,27 @@ mod sm4_test {
         #[test]
         fn sm4_test1() {
             let key = SM4::rand_block();
-            let sm4 = SM4::new(key, CipherMode::Cfb);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(key, CipherMode::Cfb).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
         #[test]
         fn sm4_test2() {
             let key = SM4::rand_block();
-            let sm4 = SM4::new(key, CipherMode::Ctr);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(key, CipherMode::Ctr).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
         #[test]
         fn sm4_test3() {
             let key = SM4::rand_block();
-            let sm4 = SM4::new(key, CipherMode::Ofb);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(key, CipherMode::Ofb).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -347,30 +373,30 @@ mod sm4_test {
         #[test]
         fn sm4_test1() {
             let key = SM4::rand_block();
-            let sm4 = SM4::new(key, CipherMode::Cfb);
+            let sm4 = SM4::new(key, CipherMode::Cfb).unwrap();
             let iv = SM4::rand_block();
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
         #[test]
         fn sm4_test2() {
             let key = SM4::rand_block();
-            let sm4 = SM4::new(key, CipherMode::Ctr);
+            let sm4 = SM4::new(key, CipherMode::Ctr).unwrap();
             let iv = SM4::rand_block();
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
         #[test]
         fn sm4_test3() {
             let key = SM4::rand_block();
-            let sm4 = SM4::new(key, CipherMode::Ofb);
+            let sm4 = SM4::new(key, CipherMode::Ofb).unwrap();
             let iv = SM4::rand_block();
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -386,9 +412,9 @@ mod sm4_test {
         fn sm4_test1() {
             let key = SM4::rand_block();
             let iv = SM4::rand_block();
-            let sm4 = SM4::new(key, iv, CipherMode::Cfb);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(key, iv, CipherMode::Cfb).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
@@ -396,9 +422,9 @@ mod sm4_test {
         fn sm4_test2() {
             let key = SM4::rand_block();
             let iv = SM4::rand_block();
-            let sm4 = SM4::new(key, iv, CipherMode::Ctr);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(key, iv, CipherMode::Ctr).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
@@ -406,9 +432,9 @@ mod sm4_test {
         fn sm4_test3() {
             let key = SM4::rand_block();
             let iv = SM4::rand_block();
-            let sm4 = SM4::new(key, iv, CipherMode::Ofb);
-            let res = sm4.encrypt("test".as_bytes());
-            let d_res = sm4.decrypt(res.as_slice());
+            let sm4 = SM4::new(key, iv, CipherMode::Ofb).unwrap();
+            let res = sm4.encrypt("test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
@@ -424,9 +450,9 @@ mod sm4_test {
         fn sm4_test1() {
             let key = SM4::rand_block();
             let iv = SM4::rand_block();
-            let sm4 = SM4::new(key, iv, CipherMode::Cfb);
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let sm4 = SM4::new(key, iv, CipherMode::Cfb).unwrap();
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
@@ -434,9 +460,9 @@ mod sm4_test {
         fn sm4_test2() {
             let key = SM4::rand_block();
             let iv = SM4::rand_block();
-            let sm4 = SM4::new(key, iv, CipherMode::Ctr);
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let sm4 = SM4::new(key, iv, CipherMode::Ctr).unwrap();
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
 
@@ -444,9 +470,9 @@ mod sm4_test {
         fn sm4_test3() {
             let key = SM4::rand_block();
             let iv = SM4::rand_block();
-            let sm4 = SM4::new(key, iv, CipherMode::Ofb);
-            let res = sm4.encrypt(&iv, "test".as_bytes());
-            let d_res = sm4.decrypt(&iv, res.as_slice());
+            let sm4 = SM4::new(key, iv, CipherMode::Ofb).unwrap();
+            let res = sm4.encrypt(&iv, "test".as_bytes()).unwrap();
+            let d_res = sm4.decrypt(&iv, res.as_slice()).unwrap();
             println!("d_res = {}", String::from_utf8(d_res).unwrap());
         }
     }
