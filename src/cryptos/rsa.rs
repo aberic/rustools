@@ -22,9 +22,8 @@ use openssl::rsa::{Padding, Rsa};
 use openssl::sign::{Signer, Verifier};
 use openssl::symm::Cipher;
 
-use crate::cryptos::base64::{Base64Decoder, Base64Encoder};
+use crate::cryptos::{Decoder, Encoder};
 use crate::cryptos::base64::Base64;
-use crate::cryptos::hex::{HexDecoder, HexEncoder};
 use crate::cryptos::Hex;
 use crate::errors::Errs;
 use crate::errors::Results;
@@ -2407,7 +2406,7 @@ mod rsa_test {
         use openssl::symm::Cipher;
 
         use crate::cryptos::base64::Base64;
-        use crate::cryptos::base64::Base64Encoder;
+        use crate::cryptos::Encoder;
         use crate::cryptos::rsa::{RSANew, RSANewPass};
         use crate::cryptos::rsa::RSA;
 
@@ -2492,7 +2491,7 @@ mod rsa_test {
         use openssl::symm::Cipher;
 
         use crate::cryptos::base64::Base64;
-        use crate::cryptos::base64::Base64Encoder;
+        use crate::cryptos::Encoder;
         use crate::cryptos::rsa::{RSANewPassStore, RSANewStore};
         use crate::cryptos::rsa::RSA;
 

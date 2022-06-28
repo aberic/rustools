@@ -12,44 +12,37 @@
  * limitations under the License.
  */
 
+use crate::cryptos::{Decoder, Encoder};
 use crate::errors::{Errs, Results};
 
 #[derive(Debug, Clone)]
 pub struct Hex;
 
-pub trait HexEncoder<T> {
-    fn encode(bytes: T) -> String;
-}
-
-pub trait HexDecoder<T> {
-    fn decode(src: T) -> Results<Vec<u8>>;
-}
-
-impl HexEncoder<&[u8]> for Hex {
+impl Encoder<&[u8]> for Hex {
     fn encode(bytes: &[u8]) -> String {
         hex::encode(bytes)
     }
 }
 
-impl HexEncoder<Vec<u8>> for Hex {
+impl Encoder<Vec<u8>> for Hex {
     fn encode(bytes: Vec<u8>) -> String {
         hex::encode(bytes.as_slice())
     }
 }
 
-impl HexEncoder<&str> for Hex {
+impl Encoder<&str> for Hex {
     fn encode(bytes: &str) -> String {
         hex::encode(bytes)
     }
 }
 
-impl HexEncoder<String> for Hex {
+impl Encoder<String> for Hex {
     fn encode(bytes: String) -> String {
         hex::encode(bytes)
     }
 }
 
-impl HexDecoder<&str> for Hex {
+impl Decoder<&str> for Hex {
     fn decode(src: &str) -> Results<Vec<u8>> {
         match hex::decode(src) {
             Ok(res) => Ok(res),
@@ -58,7 +51,7 @@ impl HexDecoder<&str> for Hex {
     }
 }
 
-impl HexDecoder<String> for Hex {
+impl Decoder<String> for Hex {
     fn decode(src: String) -> Results<Vec<u8>> {
         match hex::decode(src.as_str()) {
             Ok(res) => Ok(res),
@@ -69,7 +62,7 @@ impl HexDecoder<String> for Hex {
 
 #[cfg(test)]
 mod hex_test {
-    use crate::cryptos::hex::{HexDecoder, HexEncoder};
+    use crate::cryptos::hex::{Decoder, Encoder};
     use crate::cryptos::hex::Hex;
 
     #[test]

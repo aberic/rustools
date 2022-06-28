@@ -13,33 +13,26 @@
  */
 
 use openssl::base64::{decode_block, encode_block};
+use crate::cryptos::{Decoder, Encoder};
 
 use crate::errors::{Errs, Results};
 
 #[derive(Debug, Clone)]
 pub struct Base64;
 
-pub trait Base64Encoder<T> {
-    fn encode(bytes: T) -> String;
-}
-
-pub trait Base64Decoder<T> {
-    fn decode(src: T) -> Results<Vec<u8>>;
-}
-
-impl Base64Encoder<&[u8]> for Base64 {
+impl Encoder<&[u8]> for Base64 {
     fn encode(bytes: &[u8]) -> String {
         encode_block(bytes)
     }
 }
 
-impl Base64Encoder<Vec<u8>> for Base64 {
+impl Encoder<Vec<u8>> for Base64 {
     fn encode(bytes: Vec<u8>) -> String {
         encode_block(bytes.as_slice())
     }
 }
 
-impl Base64Decoder<&str> for Base64 {
+impl Decoder<&str> for Base64 {
     fn decode(src: &str) -> Results<Vec<u8>> {
         match decode_block(src) {
             Ok(res) => Ok(res),
@@ -48,7 +41,7 @@ impl Base64Decoder<&str> for Base64 {
     }
 }
 
-impl Base64Decoder<String> for Base64 {
+impl Decoder<String> for Base64 {
     fn decode(src: String) -> Results<Vec<u8>> {
         match decode_block(src.as_str()) {
             Ok(res) => Ok(res),
@@ -59,7 +52,7 @@ impl Base64Decoder<String> for Base64 {
 
 #[cfg(test)]
 mod base64_test {
-    use crate::cryptos::base64::{Base64, Base64Decoder, Base64Encoder};
+    use crate::cryptos::base64::{Base64, Decoder, Encoder};
 
     #[test]
     fn base64_test() {

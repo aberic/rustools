@@ -18,7 +18,7 @@ use crc::{Crc, CRC_16_IBM_SDLC, CRC_32_ISCSI, CRC_64_ECMA_182, CRC_8_BLUETOOTH};
 use openssl::hash::{Hasher, MessageDigest};
 
 use crate::cryptos::Hex;
-use crate::cryptos::hex::HexEncoder;
+use crate::cryptos::Encoder;
 use crate::errors::{Errs, Results};
 use crate::strings::Strings;
 

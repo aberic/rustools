@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 
+use crate::errors::Results;
 pub use self::hex::Hex;
 
 pub mod base64;
@@ -24,3 +25,12 @@ pub mod key;
 pub mod rsa;
 pub mod sm2;
 pub mod sm4;
+
+
+pub trait Encoder<T> {
+    fn encode(bytes: T) -> String;
+}
+
+pub trait Decoder<T> {
+    fn decode(src: T) -> Results<Vec<u8>>;
+}

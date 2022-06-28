@@ -20,9 +20,8 @@ use openssl::ecdsa::EcdsaSig;
 use openssl::nid::Nid;
 use openssl::pkey::{PKey, Private, Public};
 
-use crate::cryptos::base64::{Base64Decoder, Base64Encoder};
+use crate::cryptos::{Decoder, Encoder};
 use crate::cryptos::base64::Base64;
-use crate::cryptos::hex::{HexDecoder, HexEncoder};
 use crate::cryptos::Hex;
 use crate::errors::Errs;
 use crate::errors::Results;
@@ -749,10 +748,9 @@ mod ecdsa_test {
     #[cfg(test)]
     mod generate {
         use crate::cryptos::base64::Base64;
-        use crate::cryptos::base64::Base64Decoder;
+        use crate::cryptos::Decoder;
         use crate::cryptos::ecdsa::ECDSA;
         use crate::cryptos::hex::Hex;
-        use crate::cryptos::hex::HexDecoder;
 
         #[test]
         fn test() {

@@ -609,11 +609,10 @@ fn file_last_name<P: AsRef<Path>>(filepath: P) -> Results<String> {
 /// # Examples
 ///
 /// ```no_run
-/// use crate::io::file::{File, FileHandler};
+/// use rustools::io::file::{Filer, FilerHandler};
 ///
-/// fn main() -> std::io::Result<()> {
-///     File::cp("foo.txt", "bar.txt")?;  // Copy foo.txt to bar.txt
-///     Ok(())
+/// fn main() {
+///     Filer::cp("foo.txt", "bar.txt").unwrap();  // Copy foo.txt to bar.txt
 /// }
 /// ```
 fn file_copy<P: AsRef<Path>>(file_from_path: P, file_to_path: P) -> Results<()> {
@@ -639,11 +638,10 @@ fn file_copy<P: AsRef<Path>>(file_from_path: P, file_to_path: P) -> Results<()> 
 /// # Examples
 ///
 /// ```no_run
-/// use crate::io::file::{File, FileHandler};
+/// use rustools::io::file::{Filer, FilerHandler};
 ///
-/// fn main() -> std::io::Result<()> {
-///     File::mv("foo.txt", "bar.txt")?;  // Copy foo.txt to bar.txt
-///     Ok(())
+/// fn main() {
+///     Filer::mv("foo.txt", "bar.txt").unwrap();  // Copy foo.txt to bar.txt
 /// }
 /// ```
 fn file_move<P: AsRef<Path>>(file_from_path: P, file_to_path: P) -> Results<()> {

@@ -1020,9 +1020,9 @@ fn generate_x509(
     let mut cert_builder = X509::builder()?;
     // 设置证书版本
     cert_builder.set_version(version)?;
-    let serial_number = serial_number.generate()?;
+    let asn1Integer = serial_number.generate()?;
     // 设置证书的序列号
-    cert_builder.set_serial_number(&serial_number)?;
+    cert_builder.set_serial_number(&asn1Integer)?;
     // 设置待签发证书的主题信息
     cert_builder.set_subject_name(subject_info)?;
     // 设置与证书关联的公钥
@@ -1140,9 +1140,10 @@ impl SAN {
     ///
     /// ```
     /// use openssl::x509::extension::SubjectAlternativeName;
-    /// use openssl::x509::X509Extension;
+    /// use openssl::x509::{X509, X509Extension};
     ///
     /// fn subject_alternative_name() -> X509Extension {
+    ///     let mut cert_builder = X509::builder().unwrap();
     ///     SubjectAlternativeName::new() // 主题备用名称
     ///         .dns("example.com")
     ///         .email("info@example.com")
@@ -1313,19 +1314,6 @@ impl SerialNumber {
     /// * bits 以比特为单位的数字长度
     /// * msb_ca 期望的最高位属性，是随机生成' BigNum '的最有效位的选项
     /// * odd 如果' true '，则生成的数字为奇数
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// use george_comm::errors::GeorgeResult;
-    /// use openssl::asn1::Asn1Integer;
-    /// use openssl::bn::MsbOption;
-    ///
-    /// fn serial_number() -> GeorgeResult<Asn1Integer> {
-    ///    generate_serial_number(128, MsbOption::MAYBE_ZERO, false)
-    /// }
-    /// ```
     fn generate(&self) -> Result<Asn1Integer, ErrorStack> {
         // 创建一个值为0的新' BigNum '。
         let mut big_num = BigNum::new()?;
