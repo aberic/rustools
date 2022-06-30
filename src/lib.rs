@@ -24,6 +24,7 @@ pub use time::Time;
 pub use trans::Trans;
 pub use trans::TransHandler;
 use crate::errors::{Errs, Results};
+pub use strings::Strings;
 
 pub mod concurrent;
 pub mod cryptos;
@@ -34,7 +35,7 @@ pub mod json;
 pub mod merkle;
 pub mod openssl;
 mod rands;
-pub mod strings;
+mod strings;
 mod time;
 mod trans;
 pub mod vectors;

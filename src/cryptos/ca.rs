@@ -1020,9 +1020,9 @@ fn generate_x509(
     let mut cert_builder = X509::builder()?;
     // 设置证书版本
     cert_builder.set_version(version)?;
-    let asn1Integer = serial_number.generate()?;
+    let asn1_integer = serial_number.generate()?;
     // 设置证书的序列号
-    cert_builder.set_serial_number(&asn1Integer)?;
+    cert_builder.set_serial_number(&asn1_integer)?;
     // 设置待签发证书的主题信息
     cert_builder.set_subject_name(subject_info)?;
     // 设置与证书关联的公钥
