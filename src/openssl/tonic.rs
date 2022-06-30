@@ -49,7 +49,7 @@ pub fn incoming<S>(
 ) -> impl Stream<Item = Result<SslStream<S::Ok>, Error>>
 where
     S: TryStream + Unpin,
-    S::Ok: AsyncRead + AsyncWrite + Send + Sync + Debug + Unpin + 'static,
+    S::Ok: AsyncRead + AsyncWrite + Connected + Send + Sync + Debug + Unpin + 'static,
     S::Error: Into<Error>,
 {
     let mut tcp_listener_stream = tcp_listener_stream;
