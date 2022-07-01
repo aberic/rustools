@@ -235,7 +235,7 @@ mod log_test {
         module.config_log(vec![
             LogModule {
                 name: "mod1".to_string(),
-                pkg: "george-log::examples::log_test::log_test_mod1".to_string(),
+                pkg: "rustools::examples::log_test::log_test_mod1".to_string(),
                 level: LevelFilter::Trace,
                 additive: true,
                 dir: String::from("src/test/log"),
@@ -244,7 +244,7 @@ mod log_test {
             },
             LogModule {
                 name: "mod2".to_string(),
-                pkg: "george-log::examples::log_test::log_test_mod2".to_string(),
+                pkg: "rustools::examples::log_test::log_test_mod2".to_string(),
                 level: LevelFilter::Debug,
                 additive: true,
                 dir: String::from(""),

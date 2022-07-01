@@ -2330,7 +2330,7 @@ mod ca_test {
         )
             .unwrap();
         server_cert
-            .save_pem("src/test/crypto/ca/tls/george-server.pem")
+            .save_pem("src/test/crypto/ca/tls/rustools.pem")
             .unwrap();
 
         match server_ca.x509.issued(server_cert.x509.as_ref()) {

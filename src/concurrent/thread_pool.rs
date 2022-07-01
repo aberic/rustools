@@ -374,7 +374,7 @@ impl Builder {
         Self {
             pool_size: cmp::max(1, num_cpus::get()),
             stack_size: 0,
-            name_prefix: String::from("george-thread-pool-"),
+            name_prefix: String::from("rustools-thread-pool-"),
             task_count: 100,
         }
     }
