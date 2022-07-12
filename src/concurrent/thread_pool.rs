@@ -154,7 +154,7 @@ impl ThreadPool {
     /// ```rust
     /// use rustools::concurrent::ThreadPool;
     ///
-    /// let pool = ThreadPool::new_custom("test".to_string(), 4, 8_000_000, 100).unwrap();
+    /// let pool = ThreadPool::new_custom("test".to_string(), 4, 8_000_000).unwrap();
     /// ```
     pub fn new_custom(
         name_prefix: String,
