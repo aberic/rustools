@@ -40,7 +40,6 @@
 //! let mut thread_pool_builder = ThreadPool::builder();
 //! thread_pool_builder.pool_size(100);
 //! thread_pool_builder.name_prefix("test");
-//! thread_pool_builder.task_count(4000);
 //! let thread_pool = thread_pool_builder.create().unwrap();
 //! thread_pool.execute(|| println!("1")).unwrap();
 //! ```
@@ -54,7 +53,7 @@ use std::{cmp, thread};
 
 use crossbeam::atomic::AtomicCell;
 use crossbeam::channel::{Receiver, Sender};
-use crossbeam::queue::ArrayQueue;
+use crossbeam::queue::{ArrayQueue, SegQueue};
 use crate::concurrent::Thread;
 use crate::errors::{Errs, Results};
 
@@ -77,7 +76,7 @@ pub struct ThreadPool {
     /// 空闲线程队列
     worker_idle_queue: Arc<ArrayQueue<Worker>>,
     /// 待执行任务队列
-    task_queue: Arc<ArrayQueue<Task<'static>>>,
+    task_queue: Arc<SegQueue<Task<'static>>>,
 }
 
 impl ThreadPool {
@@ -161,13 +160,11 @@ impl ThreadPool {
         name_prefix: String,
         size: usize,
         stack_size: usize,
-        task_count: usize,
     ) -> Results<Self> {
         Builder::new()
             .name_prefix(name_prefix)
             .pool_size(size)
             .stack_size(stack_size)
-            .task_count(task_count)
             .create()
     }
 
@@ -185,11 +182,10 @@ impl ThreadPool {
         pool_state: Arc<PoolState>,
         threads: Arc<RwLock<Vec<Worker>>>,
         worker_idle_queue: Arc<ArrayQueue<Worker>>,
-        task_count: usize,
         tx_notify: Sender<Notify>,
         rx_notify: Receiver<Notify>,
     ) -> Results<Self> {
-        let task_queue = Arc::new(ArrayQueue::new(task_count));
+        let task_queue = Arc::new(SegQueue::new());
         let pool = ThreadPool {
             pool_state,
             threads,
@@ -264,24 +260,14 @@ impl ThreadPool {
     /// pool.execute(|| println!("foo"));
     /// pool.execute(|| println!("bar"));
     /// ```
-    pub fn execute<F>(&self, f: F) -> Results<()>
+    pub fn execute<F>(&self, f: F)
         where
             F: FnOnce() + Send + 'static,
     {
         let task = Box::new(f);
         match self.worker_idle_queue.pop() {
-            Some(res) => {
-                res.send(Message::Run(task));
-                Ok(())
-            }
-            None => match self.task_queue.push(task) {
-                Err(_) => {
-                    return Err(Errs::str(
-                        "the task queue is full, the element can not push into!",
-                    ))
-                }
-                _ => Ok(()),
-            },
+            Some(res) => res.send(Message::Run(task)),
+            None => self.task_queue.push(task),
         }
     }
 
@@ -351,7 +337,6 @@ impl fmt::Debug for ThreadPool {
 /// thread_pool_builder.pool_size(16);
 /// thread_pool_builder.stack_size(8_000_000);
 /// thread_pool_builder.name_prefix("test");
-/// thread_pool_builder.task_count(4000);
 /// let thread_pool = thread_pool_builder.create().unwrap();
 /// thread_pool.execute(|| println!("1")).unwrap();
 /// ```
@@ -362,8 +347,6 @@ pub struct Builder {
     stack_size: usize,
     /// 线程池的线程名前缀，如果前缀是`my-pool-`，那么池中的线程将获得类似`my-pool-1`这样的名称
     name_prefix: String,
-    /// 线程池可维护待处理任务数量，超过该数值的任务会被放弃，并返回调用者失败，默认100
-    task_count: usize,
 }
 
 impl Builder {
@@ -375,7 +358,6 @@ impl Builder {
             pool_size: cmp::max(1, num_cpus::get()),
             stack_size: 0,
             name_prefix: String::from("rustools-thread-pool-"),
-            task_count: 100,
         }
     }
 
@@ -410,12 +392,6 @@ impl Builder {
         self
     }
 
-    /// 设置线程池可维护待处理任务数量
-    pub fn task_count(&mut self, task_count: usize) -> &mut Self {
-        self.task_count = task_count;
-        self
-    }
-
     /// 通过已有的配置创建一个[`ThreadPool`](ThreadPool)
     pub fn create(&mut self) -> Results<ThreadPool> {
         let (tx_notify, rx_notify) = crossbeam::channel::unbounded();
@@ -446,7 +422,6 @@ impl Builder {
             pool_state,
             workers,
             worker_idle_queue,
-            self.task_count,
             tx_notify,
             rx_notify,
         )
@@ -698,10 +673,10 @@ mod thread_pool_test {
     #[test]
     fn test_1() {
         let thread_pool = ThreadPool::default().unwrap();
-        thread_pool.execute(|| spawn1()).unwrap();
-        thread_pool.execute(|| spawn2()).unwrap();
+        thread_pool.execute(|| spawn1());
+        thread_pool.execute(|| spawn2());
         thread::sleep(Duration::from_secs(1));
-        thread_pool.execute(|| spawn3()).unwrap();
+        thread_pool.execute(|| spawn3());
         thread::sleep(Duration::from_secs(1));
     }
 
@@ -711,10 +686,10 @@ mod thread_pool_test {
         thread_pool_builder.pool_size(100);
         thread_pool_builder.name_prefix("test");
         let thread_pool = thread_pool_builder.create().unwrap();
-        thread_pool.execute(|| spawn1()).unwrap();
-        thread_pool.execute(|| spawn2()).unwrap();
+        thread_pool.execute(|| spawn1());
+        thread_pool.execute(|| spawn2());
         thread::sleep(Duration::from_secs(1));
-        thread_pool.execute(|| spawn3()).unwrap();
+        thread_pool.execute(|| spawn3());
         thread::sleep(Duration::from_secs(1));
     }
 
@@ -722,7 +697,7 @@ mod thread_pool_test {
     fn test_3() {
         let thread_pool = ThreadPool::default().unwrap();
         for n in 0..100 {
-            thread_pool.execute(move || spawn_n(n)).expect("full!");
+            thread_pool.execute(move || spawn_n(n));
         }
         thread::sleep(Duration::from_secs(10));
     }
@@ -730,12 +705,9 @@ mod thread_pool_test {
     #[test]
     fn test_4() {
         let mut thread_pool_builder = ThreadPool::builder();
-        thread_pool_builder.task_count(4000);
         let thread_pool = thread_pool_builder.create().unwrap();
         for n in 0..1000 {
-            thread_pool
-                .execute(move || spawn_n(n))
-                .expect(format!("err index n = {}", n).as_str());
+            thread_pool.execute(move || spawn_n(n));
         }
         thread::sleep(Duration::from_secs(1));
     }
