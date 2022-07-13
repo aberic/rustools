@@ -69,6 +69,16 @@ impl Time {
         }
     }
 
+    /// 秒计 + 毫秒计
+    pub fn from_secs_nanos(secs: i64, nanoseconds: i32) -> Self {
+        let secs_duration = Duration::seconds(secs);
+        let nano_duration = Duration::nanoseconds(nanoseconds as i64);
+        match secs_duration.checked_add(&nano_duration) {
+            Some(duration) => Time{ duration },
+            None => Time { duration: secs_duration }
+        }
+    }
+
     /// 用指定的格式字符串解析字符串并返回一个新的Time。
     ///
     /// # 例子
@@ -297,10 +307,32 @@ mod time_test {
     use crate::Time;
 
     #[test]
-    fn from_test() {
+    fn from_test1() {
         let time = Time::from_secs(1638907696);
         assert_eq!("2021-12-07 20:08:16", time.format_string("%Y-%m-%d %H:%M:%S"));
         assert_eq!("2021-12-07 20:08:16", time.to_string());
+    }
+
+    #[test]
+    fn from_test2() {
+        let time = Time::from_secs(0);
+        assert_eq!("1970-01-01 00:00:00", time.format_string("%Y-%m-%d %H:%M:%S"));
+        assert_eq!("1970-01-01 00:00:00", time.to_string());
+
+        let time = Time::from_secs(-1);
+        assert_eq!("1969-12-31 23:59:59", time.format_string("%Y-%m-%d %H:%M:%S"));
+        assert_eq!("1969-12-31 23:59:59", time.to_string());
+
+        let time = Time::from_nanoseconds(-1000000000);
+        assert_eq!("1969-12-31 23:59:59", time.format_string("%Y-%m-%d %H:%M:%S"));
+        assert_eq!("1969-12-31 23:59:59", time.to_string());
+    }
+
+    #[test]
+    fn from_test3() {
+        let time = Time::from_secs_nanos(1, -1000000000);
+        assert_eq!("1970-01-01 00:00:00", time.format_string("%Y-%m-%d %H:%M:%S"));
+        assert_eq!("1970-01-01 00:00:00", time.to_string());
     }
 
     #[test]
