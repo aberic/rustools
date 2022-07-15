@@ -147,14 +147,7 @@ impl Time {
     /// assert_eq!(format!("{}", time.format("around %l %p on %b %-d")), "around 11 PM on Sep 5");
     /// ```
     pub fn format<'a>(&self, fmt: &'a str) -> DelayedFormat<StrftimeItems<'a>> {
-        let time_from_stamp = NaiveDateTime::from_timestamp(self.duration.num_seconds(), match self.duration.num_nanoseconds() {
-            Some(src) => if src < 0 {
-                0
-            } else {
-
-            },
-            None => 0,
-        });
+        let time_from_stamp = NaiveDateTime::from_timestamp(self.duration.num_seconds(), 0);
         time_from_stamp.format(fmt)
     }
 
