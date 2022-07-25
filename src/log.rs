@@ -207,11 +207,11 @@ fn rolling_appender(
                             &*format!("{}/{}{}", dir, module_name, "-log-{}.log"),
                             file_max_count,
                         )
-                        .expect("fixed window roller build failed!"),
+                        .expect(format!("fixed window roller build failed! with dir is {} and module name is {}", dir, module_name).as_str()),
                 ),
             )),
         )
-        .expect("rolling file appender build failed!")
+        .expect(format!("rolling file appender build failed! with dir is {} and module name is {}", dir, module_name).as_str())
 }
 
 
