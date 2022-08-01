@@ -120,6 +120,11 @@ impl Strings {
         parse_u64(comment.to_string())
     }
 
+    /// 字符串转usize
+    pub fn parse_usize_str(comment: &str) -> Results<usize> {
+        parse_usize(comment.to_string())
+    }
+
     /// 字符串转u8
     pub fn parse_i8_str(comment: &str) -> Results<i8> {
         parse_i8(comment.to_string())
@@ -138,6 +143,11 @@ impl Strings {
     /// 字符串转i64
     pub fn parse_i64_str(comment: &str) -> Results<i64> {
         parse_i64(comment.to_string())
+    }
+
+    /// 字符串转isize
+    pub fn parse_isize_str(comment: &str) -> Results<isize> {
+        parse_isize(comment.to_string())
     }
 
     /// 字符串转f32
@@ -315,6 +325,14 @@ fn parse_u64(comment: String) -> Results<u64> {
     }
 }
 
+/// 字符串转usize
+fn parse_usize(comment: String) -> Results<usize> {
+    match comment.parse::<usize>() {
+        Ok(real) => Ok(real),
+        Err(err) => Err(Errs::strings(format!("{} parse to usize", comment), err)),
+    }
+}
+
 /// 字符串转u8
 fn parse_i8(comment: String) -> Results<i8> {
     match comment.parse::<i8>() {
@@ -344,6 +362,14 @@ fn parse_i64(comment: String) -> Results<i64> {
     match comment.parse::<i64>() {
         Ok(real) => Ok(real),
         Err(err) => Err(Errs::strings(format!("{} parse to i64", comment), err)),
+    }
+}
+
+/// 字符串转usize
+fn parse_isize(comment: String) -> Results<isize> {
+    match comment.parse::<isize>() {
+        Ok(real) => Ok(real),
+        Err(err) => Err(Errs::strings(format!("{} parse to isize", comment), err)),
     }
 }
 
