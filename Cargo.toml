@@ -1,13 +1,13 @@
 [package]
 name = "rustools"
 version = "0.3.4"
-authors = ["aberic <100309595@qq.com>"]
+authors = ["Aberic <aberic@qq.com>"]
 license = "Apache-2.0"
-description = "Common tool library"
+description = "Common tool library for rust"
 repository = "https://github.com/aberic/rustools"
-readme = "../README.md"
-keywords = ["common"]
-edition = "2018"
+readme = "README.md"
+keywords = ["tools", "utils", "common"]
+resolver = "2"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
