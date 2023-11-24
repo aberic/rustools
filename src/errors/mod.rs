@@ -12,8 +12,8 @@
  * limitations under the License.
  */
 
-pub use entrances::Error;
-pub use entrances::Errs;
+pub use errors::entrances::Error;
+pub use errors::entrances::Errs;
 
 mod children;
 mod entrances;

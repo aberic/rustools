@@ -7,7 +7,7 @@ description = "Common tool library for rust"
 repository = "https://github.com/aberic/rustools"
 readme = "README.md"
 keywords = ["tools", "utils", "common"]
-resolver = "2"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
